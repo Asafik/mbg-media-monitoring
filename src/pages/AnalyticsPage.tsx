@@ -6,11 +6,24 @@ import {
   Video,
   X,
 } from 'lucide-react'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
+import { useCountUp } from '../hooks/useCountUp'
 
 export const AnalyticsPage: React.FC = () => {
   const [selectedPlatform, setSelectedPlatform] = useState<string>('Semua Platform')
   const [showRiskFormula, setShowRiskFormula] = useState(false)
+  const [barsAnimated, setBarsAnimated] = useState(false)
+
+  // Trigger bar grow animation after mount
+  useEffect(() => {
+    const t = setTimeout(() => setBarsAnimated(true), 200)
+    return () => clearTimeout(t)
+  }, [])
+
+  // Count-up values for KPI metrics
+  const psiValue = useCountUp('+31.2')
+  const riskValue = useCountUp('39')
+  const viewsValue = useCountUp('11.6')
 
   const platforms = ['Semua Platform', 'YouTube', 'TikTok', 'Instagram', 'Facebook']
 
@@ -122,7 +135,7 @@ export const AnalyticsPage: React.FC = () => {
             <span className="text-xs font-semibold text-slate-500">
               Indeks Sentimen Publik (PSI)
             </span>
-            <div className="text-2xl font-bold text-slate-900 mt-0.5">+31.2</div>
+            <div className="text-2xl font-bold text-slate-900 mt-0.5">{psiValue}</div>
             <span className="text-[11px] text-emerald-600 font-medium">
               Skala -100 s/d +100 (Cenderung Positif)
             </span>
@@ -148,7 +161,7 @@ export const AnalyticsPage: React.FC = () => {
                 <HelpCircle className="w-3.5 h-3.5" />
               </button>
             </div>
-            <div className="text-2xl font-bold text-rose-600 mt-0.5">39% Waspada</div>
+            <div className="text-2xl font-bold text-rose-600 mt-0.5">{riskValue}% Waspada</div>
             <span className="text-[11px] text-rose-600 font-medium">
               Dipicu isu higienitas makanan di Jabar
             </span>
@@ -189,7 +202,7 @@ export const AnalyticsPage: React.FC = () => {
             <span className="text-xs font-semibold text-slate-500">
               Total Tayangan Konten Terpantau
             </span>
-            <div className="text-2xl font-bold text-slate-900 mt-0.5">11.6M</div>
+            <div className="text-2xl font-bold text-slate-900 mt-0.5">{viewsValue}M</div>
             <span className="text-[11px] text-slate-400">
               Akumulasi views Top 5 konten di 4 platform
             </span>
@@ -265,20 +278,20 @@ export const AnalyticsPage: React.FC = () => {
               {/* Progress bar */}
               <div className="h-2.5 rounded-sm bg-slate-200 overflow-hidden flex shadow-inner">
                 <div
-                  style={{ width: `${item.positive}%` }}
-                  className="bg-emerald-500 transition-all duration-500"
+                  style={{ width: barsAnimated ? `${item.positive}%` : '0%', transition: 'width 0.9s ease-out' }}
+                  className="bg-emerald-500"
                   title={`Positif: ${item.positive}%`}
-                ></div>
+                />
                 <div
-                  style={{ width: `${item.neutral}%` }}
-                  className="bg-slate-400 transition-all duration-500"
+                  style={{ width: barsAnimated ? `${item.neutral}%` : '0%', transition: 'width 0.9s ease-out 0.1s' }}
+                  className="bg-slate-400"
                   title={`Netral: ${item.neutral}%`}
-                ></div>
+                />
                 <div
-                  style={{ width: `${item.negative}%` }}
-                  className="bg-rose-500 transition-all duration-500"
+                  style={{ width: barsAnimated ? `${item.negative}%` : '0%', transition: 'width 0.9s ease-out 0.2s' }}
+                  className="bg-rose-500"
                   title={`Negatif: ${item.negative}%`}
-                ></div>
+                />
               </div>
 
               <div className="flex items-center justify-between text-[10.5px] text-slate-500 pt-0.5">
@@ -337,8 +350,8 @@ export const AnalyticsPage: React.FC = () => {
                 <div className="h-2 rounded-sm bg-slate-100 overflow-hidden">
                   <div
                     className="h-full bg-rose-500 rounded-sm"
-                    style={{ width: `${driver.share}%` }}
-                  ></div>
+                    style={{ width: barsAnimated ? `${driver.share}%` : '0%', transition: 'width 0.8s ease-out' }}
+                  />
                 </div>
                 <div className="flex items-center justify-between text-[10.5px] text-slate-400">
                   <span>{driver.count}</span>
