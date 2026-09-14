@@ -103,10 +103,12 @@ export function useDashboardData() {
     }
     window.addEventListener('mbg-youtube-updated', handler)
     window.addEventListener('mbg-instagram-updated', handler)
+    window.addEventListener('mbg-facebook-updated', handler)
     window.addEventListener('mbg-cache-cleared', cacheClearedHandler)
     return () => {
       window.removeEventListener('mbg-youtube-updated', handler)
       window.removeEventListener('mbg-instagram-updated', handler)
+      window.removeEventListener('mbg-facebook-updated', handler)
       window.removeEventListener('mbg-cache-cleared', cacheClearedHandler)
     }
   }, [applyContentsToState])

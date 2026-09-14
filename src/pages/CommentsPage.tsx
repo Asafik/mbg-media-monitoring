@@ -4,7 +4,7 @@ import {
   faThumbsUp,
   faTriangleExclamation,
 } from '@fortawesome/free-solid-svg-icons'
-import { faYoutube, faInstagram } from '@fortawesome/free-brands-svg-icons'
+import { faYoutube, faInstagram, faFacebook } from '@fortawesome/free-brands-svg-icons'
 import { CheckCircle2, Info, MessageSquare, Search, X } from 'lucide-react'
 import React, { useMemo, useState } from 'react'
 import { mockCommentsList } from '../data/extendedMockData'
@@ -13,11 +13,16 @@ import {
   fetchInstagramComments,
   sampleInstagramComments,
 } from '../services/instagramService'
+import {
+  fetchFacebookComments,
+  sampleFacebookComments,
+} from '../services/facebookService'
 import type { CommentItem } from '../types/dashboard'
 
 const initialCombinedComments: CommentItem[] = [
   ...mockCommentsList,
   ...sampleInstagramComments,
+  ...sampleFacebookComments,
 ]
 
 export const CommentsPage: React.FC = () => {
@@ -37,6 +42,7 @@ export const CommentsPage: React.FC = () => {
   const [onlyReviewNeeded, setOnlyReviewNeeded] = useState<boolean>(false)
   const [isFetchingYouTube, setIsFetchingYouTube] = useState<boolean>(false)
   const [isFetchingInstagram, setIsFetchingInstagram] = useState<boolean>(false)
+  const [isFetchingFacebook, setIsFetchingFacebook] = useState<boolean>(false)
   const [syncSuccessMessage, setSyncSuccessMessage] = useState<string | null>(null)
 
   const sentimentFilters = ['Semua', 'positif', 'negatif', 'netral']
@@ -103,6 +109,34 @@ export const CommentsPage: React.FC = () => {
       setTimeout(() => setSyncSuccessMessage(null), 5000)
     } finally {
       setIsFetchingInstagram(false)
+    }
+  }
+
+  const handleFetchFacebookCommentsLive = async () => {
+    setIsFetchingFacebook(true)
+    try {
+      const realComments = await fetchFacebookComments()
+      if (realComments.length > 0) {
+        setCommentsList((prev) => {
+          const existingIds = new Set(realComments.map((c) => c.id))
+          const filteredPrev = prev.filter((p) => !existingIds.has(p.id))
+          const updated = [...realComments, ...filteredPrev]
+          try {
+            localStorage.setItem('mbg_live_comments', JSON.stringify(updated))
+          } catch {}
+          return updated
+        })
+        setSyncSuccessMessage(
+          `Berhasil menarik ${realComments.length} komentar publik Facebook (Tanpa API & Login) via Public Fanspage Crawler!`
+        )
+        setTimeout(() => setSyncSuccessMessage(null), 6000)
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      setSyncSuccessMessage(`Gagal menarik komentar Facebook: ${msg}`)
+      setTimeout(() => setSyncSuccessMessage(null), 5000)
+    } finally {
+      setIsFetchingFacebook(false)
     }
   }
 
@@ -329,7 +363,7 @@ export const CommentsPage: React.FC = () => {
           <button
             type="button"
             onClick={handleFetchInstagramCommentsLive}
-            disabled={isFetchingYouTube || isFetchingInstagram}
+            disabled={isFetchingYouTube || isFetchingInstagram || isFetchingFacebook}
             className="flex items-center gap-2 bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 hover:opacity-90 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-opacity cursor-pointer shadow-xs active:scale-95 disabled:opacity-50"
             title="Tarik komentar publik Instagram tanpa login atau API key"
           >
@@ -340,6 +374,23 @@ export const CommentsPage: React.FC = () => {
             )}
             <span>
               {isFetchingInstagram ? 'Menarik...' : 'Tarik Instagram (Tanpa API)'}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleFetchFacebookCommentsLive}
+            disabled={isFetchingYouTube || isFetchingInstagram || isFetchingFacebook}
+            className="flex items-center gap-2 bg-[#1877f2] hover:bg-blue-700 text-white text-xs font-semibold px-3 py-2 rounded-lg transition-colors cursor-pointer shadow-xs active:scale-95 disabled:opacity-50"
+            title="Tarik komentar publik Facebook fanspage tanpa login atau API key"
+          >
+            {isFetchingFacebook ? (
+              <FontAwesomeIcon icon={faArrowsRotate} className="animate-spin text-xs" />
+            ) : (
+              <FontAwesomeIcon icon={faFacebook} className="text-sm" />
+            )}
+            <span>
+              {isFetchingFacebook ? 'Menarik...' : 'Tarik Facebook (Tanpa API)'}
             </span>
           </button>
         </div>
@@ -534,10 +585,10 @@ export const CommentsPage: React.FC = () => {
                     <FontAwesomeIcon icon={faYoutube} className="text-red-600 text-xs" />
                   ) : item.platform === 'Instagram' ? (
                     <FontAwesomeIcon icon={faInstagram} className="text-fuchsia-600 text-xs" />
-                  ) : item.platform === 'TikTok' ? (
-                    'TT'
+                  ) : item.platform === 'Facebook' ? (
+                    <FontAwesomeIcon icon={faFacebook} className="text-blue-600 text-xs" />
                   ) : (
-                    'FB'
+                    'TT'
                   )}
                 </div>
                 <div>

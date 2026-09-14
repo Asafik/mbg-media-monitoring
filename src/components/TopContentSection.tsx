@@ -84,6 +84,10 @@ export const TopContentSection: React.FC<TopContentSectionProps> = ({
                   <span className="text-[10.5px] font-bold text-fuchsia-600 bg-fuchsia-50 border border-fuchsia-200 px-1.5 py-0.5 rounded">
                     Live Scraper
                   </span>
+                ) : platformName === 'Facebook' ? (
+                  <span className="text-[10.5px] font-bold text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded">
+                    Live Crawler
+                  </span>
                 ) : (
                   <span className="text-[10.5px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
                     Demo
@@ -95,6 +99,8 @@ export const TopContentSection: React.FC<TopContentSectionProps> = ({
                   ? 'Video Isu Kritis Terpantau'
                   : platformName === 'Instagram'
                   ? 'Postingan Isu Media Terpantau'
+                  : platformName === 'Facebook'
+                  ? 'Postingan Fanspage Media Publik'
                   : 'Top 5 dari 7 hari terakhir'}
               </span>
             </div>

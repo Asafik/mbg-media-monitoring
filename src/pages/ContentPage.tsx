@@ -6,7 +6,7 @@ import {
   faScaleBalanced,
   faArrowsRotate,
 } from '@fortawesome/free-solid-svg-icons'
-import { faYoutube, faInstagram } from '@fortawesome/free-brands-svg-icons'
+import { faYoutube, faInstagram, faFacebook } from '@fortawesome/free-brands-svg-icons'
 import {
   CheckCircle2,
   Database,
@@ -30,12 +30,17 @@ import {
   fetchTop5InstagramPosts,
   sampleInstagramPosts,
 } from '../services/instagramService'
+import {
+  fetchTop5FacebookPosts,
+  sampleFacebookPosts,
+} from '../services/facebookService'
 import type { DetailedContentItem } from '../types/dashboard'
 
-// Initial content gabungan YouTube + Instagram (Tanpa API/Login)
+// Initial content gabungan YouTube + Instagram + Facebook (Tanpa API/Login)
 const initialCombinedContents: DetailedContentItem[] = [
   ...allDetailedContents.filter((item) => item.platform === 'YouTube'),
   ...sampleInstagramPosts,
+  ...sampleFacebookPosts,
 ]
 
 export const ContentPage: React.FC = () => {
@@ -57,6 +62,7 @@ export const ContentPage: React.FC = () => {
   const [viewMode, setViewMode] = useState<'card' | 'list'>('card')
   const [isFetchingYouTube, setIsFetchingYouTube] = useState(false)
   const [isFetchingInstagram, setIsFetchingInstagram] = useState(false)
+  const [isFetchingFacebook, setIsFetchingFacebook] = useState(false)
   const [syncSuccessMessage, setSyncSuccessMessage] = useState<string | null>(null)
 
   const sentiments = ['Semua', 'positif', 'negatif', 'netral']
@@ -124,6 +130,33 @@ export const ContentPage: React.FC = () => {
     }
   }
 
+  const handleFetchFacebookLive = async () => {
+    setIsFetchingFacebook(true)
+    try {
+      const realFacebookPosts = await fetchTop5FacebookPosts()
+      if (realFacebookPosts.length > 0) {
+        setContentList((prev) => {
+          const nonFb = prev.filter((p) => p.platform !== 'Facebook')
+          const updated = [...nonFb, ...realFacebookPosts]
+          try {
+            localStorage.setItem('mbg_live_contents', JSON.stringify(updated))
+          } catch {}
+          return updated
+        })
+        setSyncSuccessMessage(
+          `Berhasil menarik ${realFacebookPosts.length} postingan Facebook (Tanpa API & Tanpa Login) via Public Fanspage Crawler!`
+        )
+        setTimeout(() => setSyncSuccessMessage(null), 6000)
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      setSyncSuccessMessage(`Error saat menarik Facebook: ${msg}`)
+      setTimeout(() => setSyncSuccessMessage(null), 5000)
+    } finally {
+      setIsFetchingFacebook(false)
+    }
+  }
+
   const filteredContents = useMemo(() => {
     const result = contentList.filter((item) => {
       const matchSearch =
@@ -178,6 +211,14 @@ export const ContentPage: React.FC = () => {
         <span className="inline-flex items-center gap-1.5 bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-200/80 px-2 py-0.5 rounded text-[11px] font-bold">
           <FontAwesomeIcon icon={faInstagram} className="text-fuchsia-600 text-xs" />
           Instagram
+        </span>
+      )
+    }
+    if (platform === 'Facebook') {
+      return (
+        <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200/80 px-2 py-0.5 rounded text-[11px] font-bold">
+          <FontAwesomeIcon icon={faFacebook} className="text-blue-600 text-xs" />
+          Facebook
         </span>
       )
     }
@@ -350,7 +391,7 @@ export const ContentPage: React.FC = () => {
           <button
             type="button"
             onClick={handleFetchInstagramLive}
-            disabled={isFetchingYouTube || isFetchingInstagram}
+            disabled={isFetchingYouTube || isFetchingInstagram || isFetchingFacebook}
             className="flex items-center gap-1.5 bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 hover:opacity-90 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-opacity cursor-pointer shadow-xs active:scale-95 disabled:opacity-50"
             title="Tarik 5 postingan Instagram dari media kredibel tanpa API key atau login"
           >
@@ -361,6 +402,24 @@ export const ContentPage: React.FC = () => {
             )}
             <span>
               {isFetchingInstagram ? 'Menarik...' : 'Tarik Instagram (Tanpa API)'}
+            </span>
+          </button>
+
+          {/* Button Tarik 5 Post Facebook (Public Fanspage Crawler - Tanpa API) */}
+          <button
+            type="button"
+            onClick={handleFetchFacebookLive}
+            disabled={isFetchingYouTube || isFetchingInstagram || isFetchingFacebook}
+            className="flex items-center gap-1.5 bg-[#1877f2] hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs active:scale-95 disabled:opacity-50"
+            title="Tarik 5 postingan Facebook fanspage berita media tanpa API key atau login"
+          >
+            {isFetchingFacebook ? (
+              <FontAwesomeIcon icon={faArrowsRotate} className="text-xs animate-spin" />
+            ) : (
+              <FontAwesomeIcon icon={faFacebook} className="text-sm" />
+            )}
+            <span>
+              {isFetchingFacebook ? 'Menarik...' : 'Tarik Facebook (Tanpa API)'}
             </span>
           </button>
 
@@ -401,7 +460,7 @@ export const ContentPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <Info className="w-4 h-4 text-blue-600 shrink-0" />
           <span>
-            <strong>Status Integrasi:</strong> <strong className="text-red-600">YouTube Data API v3 (Live)</strong> dan <strong className="text-fuchsia-600">Instagram Public Scraper (Tanpa API/Login)</strong> aktif. Platform TikTok & Facebook tetap dalam mode demo.
+            <strong>Status Integrasi:</strong> <strong className="text-red-600">YouTube Data API v3 (Live)</strong>, <strong className="text-fuchsia-600">Instagram Scraper (Tanpa Login)</strong>, dan <strong className="text-blue-600">Facebook Scraper (Tanpa Login)</strong> aktif. Platform TikTok tetap dalam mode demo.
           </span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -410,6 +469,9 @@ export const ContentPage: React.FC = () => {
           </span>
           <span className="text-[10.5px] bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-200 font-bold px-2 py-0.5 rounded">
             IG Scraper
+          </span>
+          <span className="text-[10.5px] bg-blue-50 text-blue-700 border border-blue-200 font-bold px-2 py-0.5 rounded">
+            FB Scraper
           </span>
         </div>
       </div>
