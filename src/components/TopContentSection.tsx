@@ -101,13 +101,19 @@ export const TopContentSection: React.FC<TopContentSectionProps> = ({
           </div>
         </div>
 
-        {/* List of 5 items */}
-        <div className="space-y-1.5">
-          {items.map((item) => (
-            <div
-              key={item.id}
-              className="flex items-start gap-2.5 group hover:bg-slate-50/80 p-1 rounded-lg transition-colors"
-            >
+        {/* List of 5 items or Empty State */}
+        {items.length === 0 ? (
+          <div className="py-8 px-4 text-center border border-dashed border-slate-200 rounded-lg bg-slate-50/50 flex flex-col items-center justify-center">
+            <span className="text-xs font-semibold text-slate-600">Belum Ada Konten</span>
+            <span className="text-[11px] text-slate-400 mt-0.5">Data cache telah dibersihkan</span>
+          </div>
+        ) : (
+          <div className="space-y-1.5">
+            {items.map((item) => (
+              <div
+                key={item.id}
+                className="flex items-start gap-2.5 group hover:bg-slate-50/80 p-1 rounded-lg transition-colors"
+              >
               {/* Rank */}
               <span className="text-sm font-bold text-slate-700 w-3.5 pt-0.5 shrink-0 text-center">
                 {item.rank}
@@ -205,6 +211,7 @@ export const TopContentSection: React.FC<TopContentSectionProps> = ({
             </div>
           ))}
         </div>
+        )}
       </div>
     )
   }

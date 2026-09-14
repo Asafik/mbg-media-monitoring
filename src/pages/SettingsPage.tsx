@@ -264,18 +264,21 @@ export const SettingsPage: React.FC = () => {
       const totalKeys = keysToRemove.length
       keysToRemove.forEach((k) => localStorage.removeItem(k))
 
+      // Tandai bahwa cache telah dibersihkan kosong
+      localStorage.setItem('mbg_cleared_empty', 'true')
+
       // Reset state internal di SettingsPage
       setInstagramAccounts(DEFAULT_IG_ACCOUNTS)
       setPrimaryKeywords(DEFAULT_PRIMARY_KEYWORDS)
       setIssueKeywords(DEFAULT_ISSUE_KEYWORDS)
-      setStorageStats({ count: 0, size: '0 KB' })
+      setStorageStats({ count: 1, size: '0.1 KB' })
 
       // Broadcast event ke semua halaman aktif (Dashboard, Konten, Komentar, Sumber)
       window.dispatchEvent(new CustomEvent('mbg-cache-cleared'))
 
       setIsClearingCache(false)
       setCacheClearMessage(
-        `Semua data & cache Local Storage (${totalKeys} data tersimpan) berhasil dibersihkan! Semua halaman (Konten, Komentar, Dasbor, Sumber) telah direset bersih.`
+        `Cache berhasil dibersihkan! ${totalKeys} item lokal dihapus. Halaman Konten, Komentar, dan Dasbor kini telah dikosongkan secara bersih.`
       )
       setTimeout(() => setCacheClearMessage(null), 5000)
     }, 650)

@@ -5,7 +5,7 @@ import {
   faTriangleExclamation,
 } from '@fortawesome/free-solid-svg-icons'
 import { faYoutube, faInstagram } from '@fortawesome/free-brands-svg-icons'
-import { CheckCircle2, Info, Search, X } from 'lucide-react'
+import { CheckCircle2, Info, MessageSquare, Search, X } from 'lucide-react'
 import React, { useMemo, useState } from 'react'
 import { mockCommentsList } from '../data/extendedMockData'
 import { fetchYouTubeComments } from '../services/youtubeService'
@@ -23,6 +23,9 @@ const initialCombinedComments: CommentItem[] = [
 export const CommentsPage: React.FC = () => {
   const [commentsList, setCommentsList] = useState<CommentItem[]>(() => {
     try {
+      if (localStorage.getItem('mbg_cleared_empty') === 'true') {
+        return []
+      }
       const saved = localStorage.getItem('mbg_live_comments')
       if (saved) return JSON.parse(saved)
     } catch {}
@@ -41,7 +44,7 @@ export const CommentsPage: React.FC = () => {
   // Dengarkan sinyal pembersihan cache global
   React.useEffect(() => {
     const handleCacheCleared = () => {
-      setCommentsList(initialCombinedComments)
+      setCommentsList([])
     }
     window.addEventListener('mbg-cache-cleared', handleCacheCleared)
     return () => window.removeEventListener('mbg-cache-cleared', handleCacheCleared)
@@ -589,8 +592,32 @@ export const CommentsPage: React.FC = () => {
       </div>
 
       {filteredComments.length === 0 && (
-        <div className="bg-white rounded-lg p-12 border border-slate-200 text-center text-slate-500 text-xs">
-          Tidak ada komentar yang cocok dengan filter atau pencarian Anda.
+        <div className="bg-white rounded-lg p-12 border border-slate-200 text-center shadow-xs flex flex-col items-center justify-center space-y-3">
+          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+            <MessageSquare className="w-6 h-6 text-slate-400" />
+          </div>
+          <h3 className="text-sm font-bold text-slate-800">
+            {commentsList.length === 0
+              ? 'Belum Ada Komentar (Cache Bersih / Kosong)'
+              : 'Tidak ada komentar yang cocok dengan filter'}
+          </h3>
+          <p className="text-xs text-slate-500 max-w-md">
+            {commentsList.length === 0
+              ? 'Seluruh data komentar telah dikosongkan. Klik tombol "Tarik YouTube Live" atau "Tarik Komentar IG" di atas untuk menarik komentar warganet terbaru.'
+              : 'Coba sesuaikan kata kunci pencarian atau filter sentimen.'}
+          </p>
+          {commentsList.length === 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setCommentsList(initialCombinedComments)
+                localStorage.removeItem('mbg_cleared_empty')
+              }}
+              className="mt-2 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+            >
+              Muat Ulang Komentar Sampel
+            </button>
+          )}
         </div>
       )}
     </div>

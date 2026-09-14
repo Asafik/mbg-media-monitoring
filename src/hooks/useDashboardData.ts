@@ -89,7 +89,16 @@ export function useDashboardData() {
       }
     }
     const cacheClearedHandler = () => {
-      setData(initialDashboardData)
+      setData((prev) => ({
+        ...prev,
+        contentsByPlatform: {
+          youtube: [],
+          tiktok: [],
+          instagram: [],
+          facebook: [],
+        },
+        lastUpdated: `Cache Bersih • 0 Konten Terpantau`,
+      }))
       setIsLiveFromSupabase(false)
     }
     window.addEventListener('mbg-youtube-updated', handler)

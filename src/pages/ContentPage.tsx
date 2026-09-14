@@ -9,6 +9,7 @@ import {
 import { faYoutube, faInstagram } from '@fortawesome/free-brands-svg-icons'
 import {
   CheckCircle2,
+  Database,
   ExternalLink,
   Eye,
   Info,
@@ -40,6 +41,9 @@ const initialCombinedContents: DetailedContentItem[] = [
 export const ContentPage: React.FC = () => {
   const [contentList, setContentList] = useState<DetailedContentItem[]>(() => {
     try {
+      if (localStorage.getItem('mbg_cleared_empty') === 'true') {
+        return []
+      }
       const saved = localStorage.getItem('mbg_live_contents')
       if (saved) return JSON.parse(saved)
     } catch {}
@@ -60,7 +64,7 @@ export const ContentPage: React.FC = () => {
   // Dengarkan sinyal pembersihan cache global
   React.useEffect(() => {
     const handleCacheCleared = () => {
-      setContentList(initialCombinedContents)
+      setContentList([])
     }
     window.addEventListener('mbg-cache-cleared', handleCacheCleared)
     return () => window.removeEventListener('mbg-cache-cleared', handleCacheCleared)
@@ -699,8 +703,32 @@ export const ContentPage: React.FC = () => {
       )}
 
       {filteredContents.length === 0 && (
-        <div className="bg-white rounded-lg p-12 border border-slate-200 text-center text-slate-500 text-xs">
-          Tidak ada konten yang sesuai dengan filter pencarian Anda.
+        <div className="bg-white rounded-lg p-12 border border-slate-200 text-center shadow-xs flex flex-col items-center justify-center space-y-3">
+          <div className="w-12 h-12 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
+            <Database className="w-6 h-6 text-slate-400" />
+          </div>
+          <h3 className="text-sm font-bold text-slate-800">
+            {contentList.length === 0
+              ? 'Belum Ada Konten (Cache Bersih / Kosong)'
+              : 'Tidak ada konten yang cocok dengan filter'}
+          </h3>
+          <p className="text-xs text-slate-500 max-w-md">
+            {contentList.length === 0
+              ? 'Seluruh data cache telah dibersihkan. Klik tombol "Tarik YouTube Live" atau "Tarik Instagram" di atas untuk memantau data baru, atau pulihkan data sampel bawaan.'
+              : 'Coba ubah kata kunci pencarian atau filter platform/sentimen.'}
+          </p>
+          {contentList.length === 0 && (
+            <button
+              type="button"
+              onClick={() => {
+                setContentList(initialCombinedContents)
+                localStorage.removeItem('mbg_cleared_empty')
+              }}
+              className="mt-2 text-xs font-semibold text-blue-600 bg-blue-50 hover:bg-blue-100 border border-blue-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
+            >
+              Muat Ulang Data Sampel
+            </button>
+          )}
         </div>
       )}
     </div>
