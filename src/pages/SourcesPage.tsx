@@ -25,11 +25,15 @@ export const SourcesPage: React.FC = () => {
         const parsed: MonitoredSourceItem[] = JSON.parse(saved)
         // Pastikan hanya akun Instagram yang dimuat sesuai fokus crawler saat ini
         const igOnly = parsed.filter((item) => item.platform === 'Instagram')
-        if (igOnly.length > 0) return igOnly
+        if (igOnly.length > 0) {
+          localStorage.setItem('mbg_monitored_sources', JSON.stringify(igOnly))
+          return igOnly
+        }
       }
     } catch {
       // Fallback
     }
+    localStorage.setItem('mbg_monitored_sources', JSON.stringify(defaultMonitoredSources))
     return defaultMonitoredSources
   })
 
@@ -175,11 +179,11 @@ export const SourcesPage: React.FC = () => {
               <FontAwesomeIcon icon={faInstagram} className="text-sm" />
             </div>
             <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
-              Sumber Akun Pantauan Instagram
+              Target Akun Pantauan Instagram
             </h2>
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Daftar target akun publik Instagram (media berita nasional, jurnalisme investigasi, dan kanal warganet) yang aktif dipantau crawler MBG.
+            Daftar target akun publik Instagram yang dipantau crawler MBG. YouTube memantau secara global via pencarian kata kunci, sedangkan TikTok & Facebook belum diaktifkan.
           </p>
         </div>
 
@@ -205,11 +209,11 @@ export const SourcesPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Info Notice: Fokus Instagram */}
-      <div className="p-3 bg-blue-50/70 border border-blue-200/80 rounded-lg text-xs text-blue-900 flex items-start gap-2.5">
+      {/* Info Notice: Alasan Khusus Instagram */}
+      <div className="p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-lg text-xs text-blue-900 flex items-start gap-2.5">
         <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
         <div className="leading-relaxed">
-          <span className="font-bold">Fokus Pemantauan Aktif (Instagram):</span> Saat ini sistem pemantauan akun dikhususkan pada platform <strong>Instagram</strong> karena integrasi crawler akun publik telah siap dan aktif mengambil postingan & komentar terkait MBG. Platform lain (TikTok, Facebook, YouTube) akan diaktifkan secara berkala saat modul crawling masing-masing selesai.
+          <span className="font-bold">Fokus Tabel Khusus Target Instagram:</span> Tabel pemantauan akun ini dikhususkan untuk platform <strong>Instagram</strong>. Platform <strong>YouTube</strong> tidak memerlukan daftar akun karena sistem mencari konten secara <strong>global</strong> menggunakan pencarian kata kunci MBG (YouTube Data API v3). Sedangkan platform <strong>TikTok & Facebook</strong> ditiadakan sementara dan belum diaktifkan.
         </div>
       </div>
 
