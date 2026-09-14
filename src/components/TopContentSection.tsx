@@ -88,11 +88,11 @@ export const TopContentSection: React.FC<TopContentSectionProps> = ({
         </div>
 
         {/* List of 5 items */}
-        <div className="space-y-3">
+        <div className="space-y-1.5">
           {items.map((item) => (
             <div
               key={item.id}
-              className="flex items-start gap-2.5 group hover:bg-slate-50/80 p-1.5 rounded-lg transition-colors"
+              className="flex items-start gap-2.5 group hover:bg-slate-50/80 p-1 rounded-lg transition-colors"
             >
               {/* Rank */}
               <span className="text-sm font-bold text-slate-700 w-3.5 pt-0.5 shrink-0 text-center">
