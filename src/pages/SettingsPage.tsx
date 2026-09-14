@@ -19,10 +19,10 @@ import {
 import React, { useState } from 'react'
 
 const DEFAULT_IG_ACCOUNTS = [
-  { username: '@kompascom', label: 'Media Berita Nasional', isDefault: true },
-  { username: '@tribunnews', label: 'Jaringan Berita Daerah', isDefault: true },
-  { username: '@narasinewsroom', label: 'Jurnalisme Kritis & Investigasi', isDefault: true },
-  { username: '@kumparancom', label: 'Media Digital & Warganet', isDefault: true },
+  { username: '@kompascom', label: 'Media Berita Nasional', isDefault: true, isActive: true },
+  { username: '@tribunnews', label: 'Jaringan Berita Daerah', isDefault: true, isActive: true },
+  { username: '@narasinewsroom', label: 'Jurnalisme Kritis & Investigasi', isDefault: true, isActive: true },
+  { username: '@kumparancom', label: 'Media Digital & Warganet', isDefault: true, isActive: true },
 ]
 
 export const SettingsPage: React.FC = () => {
@@ -49,7 +49,7 @@ export const SettingsPage: React.FC = () => {
 
   // Monitored Instagram Public Accounts (Default 4 Media Besar)
   const [instagramAccounts, setInstagramAccounts] = useState<
-    Array<{ username: string; label: string; isDefault: boolean }>
+    Array<{ username: string; label: string; isDefault: boolean; isActive?: boolean }>
   >(() => {
     try {
       const saved = localStorage.getItem('mbg_instagram_accounts')
@@ -175,6 +175,19 @@ export const SettingsPage: React.FC = () => {
 
   const handleRemoveInstagramAccount = (username: string) => {
     const updated = instagramAccounts.filter((a) => a.username !== username)
+    setInstagramAccounts(updated)
+    try {
+      localStorage.setItem('mbg_instagram_accounts', JSON.stringify(updated))
+    } catch {}
+  }
+
+  const handleToggleInstagramAccount = (username: string) => {
+    const updated = instagramAccounts.map((a) => {
+      if (a.username === username) {
+        return { ...a, isActive: a.isActive === false ? true : false }
+      }
+      return a
+    })
     setInstagramAccounts(updated)
     try {
       localStorage.setItem('mbg_instagram_accounts', JSON.stringify(updated))
@@ -492,36 +505,66 @@ export const SettingsPage: React.FC = () => {
 
         {/* List Akun yang Dipantau */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
-          {instagramAccounts.map((acc) => (
-            <div
-              key={acc.username}
-              className="p-3 bg-slate-50 border border-slate-200/80 rounded-lg flex items-center justify-between gap-2 text-xs"
-            >
-              <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-bold text-slate-900 truncate">
-                    {acc.username}
-                  </span>
-                  {acc.isDefault && (
-                    <span className="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 py-0.2 rounded">
-                      Default
-                    </span>
-                  )}
-                </div>
-                <span className="text-[11px] text-slate-500 block truncate mt-0.5">
-                  {acc.label}
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={() => handleRemoveInstagramAccount(acc.username)}
-                className="text-slate-400 hover:text-rose-600 p-1 transition-colors cursor-pointer shrink-0"
-                title={`Hapus ${acc.username}`}
+          {instagramAccounts.map((acc) => {
+            const isAccActive = acc.isActive !== false
+            return (
+              <div
+                key={acc.username}
+                className={`p-3 border rounded-lg flex items-center justify-between gap-2 text-xs transition-colors ${
+                  isAccActive ? 'bg-slate-50 border-slate-200/80' : 'bg-slate-100/50 border-slate-200 opacity-70'
+                }`}
               >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-          ))}
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-bold text-slate-900 truncate">
+                      {acc.username}
+                    </span>
+                    {acc.isDefault && (
+                      <span className="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 py-0.2 rounded">
+                        Default
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-[11px] text-slate-500 block truncate mt-0.5">
+                    {acc.label}
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-1.5 shrink-0">
+                  {/* Toggle Switch Aktif / Tidak Aktif */}
+                  <button
+                    type="button"
+                    role="switch"
+                    aria-checked={isAccActive}
+                    onClick={() => handleToggleInstagramAccount(acc.username)}
+                    className={`relative inline-flex h-4.5 w-8 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                      isAccActive ? 'bg-emerald-600' : 'bg-slate-300'
+                    }`}
+                    title={
+                      isAccActive
+                        ? 'Status: Aktif. Klik untuk ubah ke Tidak Aktif'
+                        : 'Status: Tidak Aktif. Klik untuk ubah ke Aktif'
+                    }
+                  >
+                    <span
+                      className={`pointer-events-none inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                        isAccActive ? 'translate-x-3.5' : 'translate-x-0'
+                      }`}
+                    />
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => handleRemoveInstagramAccount(acc.username)}
+                    className="text-slate-400 hover:text-rose-600 p-1 transition-colors cursor-pointer"
+                    title={`Hapus ${acc.username}`}
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              </div>
+            )
+          })}
         </div>
       </div>
 
