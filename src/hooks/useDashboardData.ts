@@ -51,10 +51,45 @@ export function useDashboardData() {
       ? new Promise<void>((resolve) => setTimeout(resolve, 900))
       : Promise.resolve()
 
+    const syncFromLocalStorage = () => {
+      if (typeof window === 'undefined') return
+      try {
+        const savedLive = localStorage.getItem('mbg_live_contents')
+        if (savedLive) {
+          const parsed = JSON.parse(savedLive) as DetailedContentItem[]
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            applyContentsToState(parsed)
+            return true
+          }
+        }
+        if (localStorage.getItem('mbg_cleared_empty') === 'true') {
+          setData((prev) => ({
+            ...prev,
+            contentsByPlatform: {
+              youtube: [],
+              tiktok: [],
+              instagram: [],
+              facebook: [],
+            },
+            lastUpdated: `Cache Bersih • 0 Konten Terpantau`,
+          }))
+          return true
+        }
+      } catch {}
+      return false
+    }
+
     let ignore = false
 
     async function loadData() {
       try {
+        // Cek localStorage segera tanpa delay
+        const synced = syncFromLocalStorage()
+        if (synced && !ignore) {
+          setIsLoading(false)
+          return
+        }
+
         await mockDelay
         if (!ignore) setIsLoading(false)
 
@@ -80,14 +115,26 @@ export function useDashboardData() {
     }
   }, [applyContentsToState])
 
-  // Real-time synchronization when YouTube or Instagram data is fetched
+  // Real-time synchronization when YouTube, Instagram, or Facebook data is fetched or page changes
   useEffect(() => {
-    const handler = (e: Event) => {
+    const handleContentsUpdate = (e: Event) => {
       const customEvent = e as CustomEvent<DetailedContentItem[]>
-      if (customEvent.detail && Array.isArray(customEvent.detail)) {
+      if (customEvent.detail && Array.isArray(customEvent.detail) && customEvent.detail.length > 0) {
         applyContentsToState(customEvent.detail)
+      } else {
+        // Fallback baca dari localStorage
+        try {
+          const saved = localStorage.getItem('mbg_live_contents')
+          if (saved) {
+            const parsed = JSON.parse(saved)
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              applyContentsToState(parsed)
+            }
+          }
+        } catch {}
       }
     }
+
     const cacheClearedHandler = () => {
       setData((prev) => ({
         ...prev,
@@ -101,15 +148,49 @@ export function useDashboardData() {
       }))
       setIsLiveFromSupabase(false)
     }
-    window.addEventListener('mbg-youtube-updated', handler)
-    window.addEventListener('mbg-instagram-updated', handler)
-    window.addEventListener('mbg-facebook-updated', handler)
+
+    // Re-sync kapan pun rute/menu berpindah (hashchange) atau window fokus
+    const handleNavigationSync = () => {
+      try {
+        const savedLive = localStorage.getItem('mbg_live_contents')
+        if (savedLive) {
+          const parsed = JSON.parse(savedLive) as DetailedContentItem[]
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            applyContentsToState(parsed)
+            return
+          }
+        }
+        if (localStorage.getItem('mbg_cleared_empty') === 'true') {
+          setData((prev) => ({
+            ...prev,
+            contentsByPlatform: {
+              youtube: [],
+              tiktok: [],
+              instagram: [],
+              facebook: [],
+            },
+            lastUpdated: `Cache Bersih • 0 Konten Terpantau`,
+          }))
+        }
+      } catch {}
+    }
+
+    window.addEventListener('mbg-live-contents-updated', handleContentsUpdate)
+    window.addEventListener('mbg-youtube-updated', handleContentsUpdate)
+    window.addEventListener('mbg-instagram-updated', handleContentsUpdate)
+    window.addEventListener('mbg-facebook-updated', handleContentsUpdate)
     window.addEventListener('mbg-cache-cleared', cacheClearedHandler)
+    window.addEventListener('hashchange', handleNavigationSync)
+    window.addEventListener('storage', handleNavigationSync)
+
     return () => {
-      window.removeEventListener('mbg-youtube-updated', handler)
-      window.removeEventListener('mbg-instagram-updated', handler)
-      window.removeEventListener('mbg-facebook-updated', handler)
+      window.removeEventListener('mbg-live-contents-updated', handleContentsUpdate)
+      window.removeEventListener('mbg-youtube-updated', handleContentsUpdate)
+      window.removeEventListener('mbg-instagram-updated', handleContentsUpdate)
+      window.removeEventListener('mbg-facebook-updated', handleContentsUpdate)
       window.removeEventListener('mbg-cache-cleared', cacheClearedHandler)
+      window.removeEventListener('hashchange', handleNavigationSync)
+      window.removeEventListener('storage', handleNavigationSync)
     }
   }, [applyContentsToState])
 

@@ -98,11 +98,18 @@ const initialCombinedContents: DetailedContentItem[] = sanitizeThumbnails([
 export const ContentPage: React.FC = () => {
   const [contentList, setContentList] = useState<DetailedContentItem[]>(() => {
     try {
+      const saved = localStorage.getItem('mbg_live_contents')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return sanitizeThumbnails(parsed)
+        }
+      }
       if (localStorage.getItem('mbg_cleared_empty') === 'true') {
         return []
       }
-      const saved = localStorage.getItem('mbg_live_contents')
-      if (saved) return sanitizeThumbnails(JSON.parse(saved))
+      // Simpan dataset bawaan ke storage jika belum pernah di-clear
+      localStorage.setItem('mbg_live_contents', JSON.stringify(initialCombinedContents))
     } catch {}
     return initialCombinedContents
   })
@@ -138,7 +145,9 @@ export const ContentPage: React.FC = () => {
           const nonYt = prev.filter((p) => p.platform !== 'YouTube')
           const updated = [...realYouTubeVideos, ...nonYt]
           try {
+            localStorage.removeItem('mbg_cleared_empty')
             localStorage.setItem('mbg_live_contents', JSON.stringify(updated))
+            window.dispatchEvent(new CustomEvent('mbg-live-contents-updated', { detail: updated }))
           } catch {}
           return updated
         })
@@ -165,7 +174,9 @@ export const ContentPage: React.FC = () => {
           const nonIg = prev.filter((p) => p.platform !== 'Instagram')
           const updated = [...nonIg, ...realInstagramPosts]
           try {
+            localStorage.removeItem('mbg_cleared_empty')
             localStorage.setItem('mbg_live_contents', JSON.stringify(updated))
+            window.dispatchEvent(new CustomEvent('mbg-live-contents-updated', { detail: updated }))
           } catch {}
           return updated
         })
@@ -192,7 +203,9 @@ export const ContentPage: React.FC = () => {
           const nonFb = prev.filter((p) => p.platform !== 'Facebook')
           const updated = [...nonFb, ...realFacebookPosts]
           try {
+            localStorage.removeItem('mbg_cleared_empty')
             localStorage.setItem('mbg_live_contents', JSON.stringify(updated))
+            window.dispatchEvent(new CustomEvent('mbg-live-contents-updated', { detail: updated }))
           } catch {}
           return updated
         })

@@ -28,11 +28,18 @@ const initialCombinedComments: CommentItem[] = [
 export const CommentsPage: React.FC = () => {
   const [commentsList, setCommentsList] = useState<CommentItem[]>(() => {
     try {
+      const saved = localStorage.getItem('mbg_live_comments')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed
+        }
+      }
       if (localStorage.getItem('mbg_cleared_empty') === 'true') {
         return []
       }
-      const saved = localStorage.getItem('mbg_live_comments')
-      if (saved) return JSON.parse(saved)
+      // Simpan komentar bawaan ke storage jika belum pernah di-clear
+      localStorage.setItem('mbg_live_comments', JSON.stringify(initialCombinedComments))
     } catch {}
     return initialCombinedComments
   })
@@ -66,7 +73,9 @@ export const CommentsPage: React.FC = () => {
           const filteredPrev = prev.filter((p) => !existingIds.has(p.id))
           const updated = [...realComments, ...filteredPrev]
           try {
+            localStorage.removeItem('mbg_cleared_empty')
             localStorage.setItem('mbg_live_comments', JSON.stringify(updated))
+            window.dispatchEvent(new CustomEvent('mbg-live-comments-updated', { detail: updated }))
           } catch {}
           return updated
         })
@@ -94,7 +103,9 @@ export const CommentsPage: React.FC = () => {
           const filteredPrev = prev.filter((p) => !existingIds.has(p.id))
           const updated = [...realComments, ...filteredPrev]
           try {
+            localStorage.removeItem('mbg_cleared_empty')
             localStorage.setItem('mbg_live_comments', JSON.stringify(updated))
+            window.dispatchEvent(new CustomEvent('mbg-live-comments-updated', { detail: updated }))
           } catch {}
           return updated
         })
@@ -122,7 +133,9 @@ export const CommentsPage: React.FC = () => {
           const filteredPrev = prev.filter((p) => !existingIds.has(p.id))
           const updated = [...realComments, ...filteredPrev]
           try {
+            localStorage.removeItem('mbg_cleared_empty')
             localStorage.setItem('mbg_live_comments', JSON.stringify(updated))
+            window.dispatchEvent(new CustomEvent('mbg-live-comments-updated', { detail: updated }))
           } catch {}
           return updated
         })
