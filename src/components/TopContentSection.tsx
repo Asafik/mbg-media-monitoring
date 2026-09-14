@@ -66,7 +66,7 @@ export const TopContentSection: React.FC<TopContentSectionProps> = ({
     items: PlatformContentItem[],
   ) => {
     return (
-      <div className="bg-white rounded-lg p-3.5 border border-slate-200 shadow-xs flex flex-col justify-between">
+      <div className="bg-white rounded-lg p-3.5 border border-slate-200 shadow-xs flex flex-col">
         {/* Column Header */}
         <div className="flex items-center justify-between mb-2 pb-2 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
