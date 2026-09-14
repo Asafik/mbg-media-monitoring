@@ -21,7 +21,13 @@ const initialCombinedComments: CommentItem[] = [
 ]
 
 export const CommentsPage: React.FC = () => {
-  const [commentsList, setCommentsList] = useState<CommentItem[]>(initialCombinedComments)
+  const [commentsList, setCommentsList] = useState<CommentItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('mbg_live_comments')
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return initialCombinedComments
+  })
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedSentiment, setSelectedSentiment] = useState<string>('Semua')
   const [selectedPlatform, setSelectedPlatform] = useState<string>('Semua')
@@ -32,6 +38,15 @@ export const CommentsPage: React.FC = () => {
 
   const sentimentFilters = ['Semua', 'positif', 'negatif', 'netral']
 
+  // Dengarkan sinyal pembersihan cache global
+  React.useEffect(() => {
+    const handleCacheCleared = () => {
+      setCommentsList(initialCombinedComments)
+    }
+    window.addEventListener('mbg-cache-cleared', handleCacheCleared)
+    return () => window.removeEventListener('mbg-cache-cleared', handleCacheCleared)
+  }, [])
+
   const handleFetchCommentsLive = async () => {
     setIsFetchingYouTube(true)
     try {
@@ -40,7 +55,11 @@ export const CommentsPage: React.FC = () => {
         setCommentsList((prev) => {
           const existingIds = new Set(realComments.map((c) => c.id))
           const filteredPrev = prev.filter((p) => !existingIds.has(p.id))
-          return [...realComments, ...filteredPrev]
+          const updated = [...realComments, ...filteredPrev]
+          try {
+            localStorage.setItem('mbg_live_comments', JSON.stringify(updated))
+          } catch {}
+          return updated
         })
         setSyncSuccessMessage(
           `Berhasil menarik ${realComments.length} komentar riil YouTube via Live Data API v3!`
@@ -64,7 +83,11 @@ export const CommentsPage: React.FC = () => {
         setCommentsList((prev) => {
           const existingIds = new Set(realComments.map((c) => c.id))
           const filteredPrev = prev.filter((p) => !existingIds.has(p.id))
-          return [...realComments, ...filteredPrev]
+          const updated = [...realComments, ...filteredPrev]
+          try {
+            localStorage.setItem('mbg_live_comments', JSON.stringify(updated))
+          } catch {}
+          return updated
         })
         setSyncSuccessMessage(
           `Berhasil menarik ${realComments.length} komentar publik Instagram (Tanpa API & Login) via Public Scraper!`

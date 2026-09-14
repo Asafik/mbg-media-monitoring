@@ -38,7 +38,13 @@ const initialCombinedContents: DetailedContentItem[] = [
 ]
 
 export const ContentPage: React.FC = () => {
-  const [contentList, setContentList] = useState<DetailedContentItem[]>(initialCombinedContents)
+  const [contentList, setContentList] = useState<DetailedContentItem[]>(() => {
+    try {
+      const saved = localStorage.getItem('mbg_live_contents')
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return initialCombinedContents
+  })
   const [searchTerm, setSearchTerm] = useState('')
   const [selectedSentiment, setSelectedSentiment] = useState<string>('Semua')
   const [selectedPlatform, setSelectedPlatform] = useState<string>('Semua')
@@ -51,6 +57,15 @@ export const ContentPage: React.FC = () => {
 
   const sentiments = ['Semua', 'positif', 'negatif', 'netral']
 
+  // Dengarkan sinyal pembersihan cache global
+  React.useEffect(() => {
+    const handleCacheCleared = () => {
+      setContentList(initialCombinedContents)
+    }
+    window.addEventListener('mbg-cache-cleared', handleCacheCleared)
+    return () => window.removeEventListener('mbg-cache-cleared', handleCacheCleared)
+  }, [])
+
   const handleFetchYouTubeLive = async () => {
     setIsFetchingYouTube(true)
     try {
@@ -58,7 +73,11 @@ export const ContentPage: React.FC = () => {
       if (realYouTubeVideos.length > 0) {
         setContentList((prev) => {
           const nonYt = prev.filter((p) => p.platform !== 'YouTube')
-          return [...realYouTubeVideos, ...nonYt]
+          const updated = [...realYouTubeVideos, ...nonYt]
+          try {
+            localStorage.setItem('mbg_live_contents', JSON.stringify(updated))
+          } catch {}
+          return updated
         })
         setSyncSuccessMessage(
           `Berhasil menarik ${realYouTubeVideos.length} video asli YouTube tentang isu: "${selectedIssueTopic.toUpperCase()}" via Live API!`
@@ -81,7 +100,11 @@ export const ContentPage: React.FC = () => {
       if (realInstagramPosts.length > 0) {
         setContentList((prev) => {
           const nonIg = prev.filter((p) => p.platform !== 'Instagram')
-          return [...nonIg, ...realInstagramPosts]
+          const updated = [...nonIg, ...realInstagramPosts]
+          try {
+            localStorage.setItem('mbg_live_contents', JSON.stringify(updated))
+          } catch {}
+          return updated
         })
         setSyncSuccessMessage(
           `Berhasil menarik ${realInstagramPosts.length} postingan Instagram (Tanpa API & Tanpa Login) via Public Scraper!`

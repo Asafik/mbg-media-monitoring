@@ -5,6 +5,7 @@ import {
   Bell,
   Check,
   Database,
+  HardDrive,
   Info,
   Plus,
   Radio,
@@ -14,7 +15,7 @@ import {
   Tag,
   Trash2,
 } from 'lucide-react'
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 const DEFAULT_IG_ACCOUNTS = [
   { username: '@kompascom', label: 'Media Berita Nasional', isDefault: true, isActive: true },
@@ -23,26 +24,42 @@ const DEFAULT_IG_ACCOUNTS = [
   { username: '@kumparancom', label: 'Media Digital & Warganet', isDefault: true, isActive: true },
 ]
 
+const DEFAULT_PRIMARY_KEYWORDS = [
+  'MBG',
+  'Makan Bergizi Gratis',
+  'Dapur SPPG',
+  'Satuan Pelayanan Pangan Gizi',
+]
+
+const DEFAULT_ISSUE_KEYWORDS = [
+  'keracunan',
+  'basi',
+  'tidak tepat sasaran',
+  'terlambat',
+  'porsi sedikit',
+  'ompreng',
+  'susu sapi',
+]
+
 export const SettingsPage: React.FC = () => {
   // Keyword Utama (Wajib ada pada konten)
-  const [primaryKeywords, setPrimaryKeywords] = useState([
-    'MBG',
-    'Makan Bergizi Gratis',
-    'Dapur SPPG',
-    'Satuan Pelayanan Pangan Gizi',
-  ])
+  const [primaryKeywords, setPrimaryKeywords] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('mbg_primary_keywords')
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return DEFAULT_PRIMARY_KEYWORDS
+  })
   const [newPrimary, setNewPrimary] = useState('')
 
   // Keyword Isu Terkait (Hanya ditarik jika bersamaan dengan Keyword Utama)
-  const [issueKeywords, setIssueKeywords] = useState([
-    'keracunan',
-    'basi',
-    'tidak tepat sasaran',
-    'terlambat',
-    'porsi sedikit',
-    'ompreng',
-    'susu sapi',
-  ])
+  const [issueKeywords, setIssueKeywords] = useState<string[]>(() => {
+    try {
+      const saved = localStorage.getItem('mbg_issue_keywords')
+      if (saved) return JSON.parse(saved)
+    } catch {}
+    return DEFAULT_ISSUE_KEYWORDS
+  })
   const [newIssue, setNewIssue] = useState('')
 
   // Monitored Instagram Public Accounts (Default 4 Media Besar)
@@ -69,10 +86,41 @@ export const SettingsPage: React.FC = () => {
   const [requireSpikeCondition, setRequireSpikeCondition] = useState(true)
   const [emailAlerts, setEmailAlerts] = useState(true)
 
-  // Status Actions (Ping API, Save)
+  // Status Actions (Save, Clear Cache, Ping API)
   const [savedSuccess, setSavedSuccess] = useState(false)
+  const [isClearingCache, setIsClearingCache] = useState(false)
+  const [cacheClearMessage, setCacheClearMessage] = useState<string | null>(null)
   const [isTestingApi, setIsTestingApi] = useState(false)
   const [apiTestMessage, setApiTestMessage] = useState<string | null>(null)
+
+  const getStorageStats = () => {
+    try {
+      const keys = Object.keys(localStorage).filter((k) => k.startsWith('mbg_'))
+      let totalBytes = 0
+      keys.forEach((k) => {
+        const val = localStorage.getItem(k) || ''
+        totalBytes += (k.length + val.length) * 2
+      })
+      const kb = (totalBytes / 1024).toFixed(1)
+      return { count: keys.length, size: `${kb} KB` }
+    } catch {
+      return { count: 0, size: '0 KB' }
+    }
+  }
+
+  const [storageStats, setStorageStats] = useState(getStorageStats())
+
+  // Dengarkan jika ada event pembersihan cache
+  useEffect(() => {
+    const handleCacheCleared = () => {
+      setInstagramAccounts(DEFAULT_IG_ACCOUNTS)
+      setPrimaryKeywords(DEFAULT_PRIMARY_KEYWORDS)
+      setIssueKeywords(DEFAULT_ISSUE_KEYWORDS)
+      setStorageStats({ count: 0, size: '0 KB' })
+    }
+    window.addEventListener('mbg-cache-cleared', handleCacheCleared)
+    return () => window.removeEventListener('mbg-cache-cleared', handleCacheCleared)
+  }, [])
 
   // Collector status data
   const collectors = [
@@ -200,9 +248,37 @@ export const SettingsPage: React.FC = () => {
   const handleSave = () => {
     try {
       localStorage.setItem('mbg_instagram_accounts', JSON.stringify(instagramAccounts))
+      localStorage.setItem('mbg_primary_keywords', JSON.stringify(primaryKeywords))
+      localStorage.setItem('mbg_issue_keywords', JSON.stringify(issueKeywords))
+      setStorageStats(getStorageStats())
     } catch {}
     setSavedSuccess(true)
     setTimeout(() => setSavedSuccess(false), 3000)
+  }
+
+  const handleClearCache = () => {
+    setIsClearingCache(true)
+    setTimeout(() => {
+      // Hapus seluruh key mbg_* dari browser localStorage
+      const keysToRemove = Object.keys(localStorage).filter((k) => k.startsWith('mbg_'))
+      const totalKeys = keysToRemove.length
+      keysToRemove.forEach((k) => localStorage.removeItem(k))
+
+      // Reset state internal di SettingsPage
+      setInstagramAccounts(DEFAULT_IG_ACCOUNTS)
+      setPrimaryKeywords(DEFAULT_PRIMARY_KEYWORDS)
+      setIssueKeywords(DEFAULT_ISSUE_KEYWORDS)
+      setStorageStats({ count: 0, size: '0 KB' })
+
+      // Broadcast event ke semua halaman aktif (Dashboard, Konten, Komentar, Sumber)
+      window.dispatchEvent(new CustomEvent('mbg-cache-cleared'))
+
+      setIsClearingCache(false)
+      setCacheClearMessage(
+        `Semua data & cache Local Storage (${totalKeys} data tersimpan) berhasil dibersihkan! Semua halaman (Konten, Komentar, Dasbor, Sumber) telah direset bersih.`
+      )
+      setTimeout(() => setCacheClearMessage(null), 5000)
+    }, 650)
   }
 
 
@@ -235,6 +311,13 @@ export const SettingsPage: React.FC = () => {
         </div>
       )}
 
+      {cacheClearMessage && (
+        <div className="p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-xs flex items-center gap-2 animate-in fade-in">
+          <Check className="w-4 h-4 text-blue-600 shrink-0" />
+          <span>{cacheClearMessage}</span>
+        </div>
+      )}
+
       {apiTestMessage && (
         <div className="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg text-xs flex items-center gap-2 animate-in fade-in">
           <Activity className="w-4 h-4 text-amber-600 shrink-0" />
@@ -242,49 +325,106 @@ export const SettingsPage: React.FC = () => {
         </div>
       )}
 
-      {/* SECTION 1: STATUS DATABASE SUPABASE */}
-      <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-xs space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-          <div className="flex items-center gap-2">
-            <Database className="w-4 h-4 text-emerald-600" />
-            <h3 className="text-sm font-bold text-slate-900">
-              Status Database Supabase (asafik)
-            </h3>
+      {/* SECTION 1: STATUS DATABASE & PEMBERSIHAN CACHE LOCAL STORAGE */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {/* 1A: Status Database Supabase */}
+        <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <div className="flex items-center gap-2">
+                <Database className="w-4 h-4 text-emerald-600" />
+                <h3 className="text-sm font-bold text-slate-900">
+                  Status Database Supabase (asafik)
+                </h3>
+              </div>
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+                Healthy (Production)
+              </span>
+            </div>
+
+            <p className="text-xs text-slate-500">
+              Database PostgreSQL terkelola di <strong>Supabase Cloud</strong> untuk penyimpanan data konten, komentar, dan analisis MBG.
+            </p>
+
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
+                <span className="text-[10px] text-slate-400 block">Proyek</span>
+                <span className="font-bold text-slate-800 text-xs">asafik</span>
+              </div>
+              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
+                <span className="text-[10px] text-slate-400 block">Region</span>
+                <span className="font-bold text-slate-800 text-xs">ap-northeast-1</span>
+              </div>
+              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
+                <span className="text-[10px] text-slate-400 block">Compute</span>
+                <span className="font-bold text-emerald-600 text-xs">Nano (CPU 3%)</span>
+              </div>
+              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
+                <span className="text-[10px] text-slate-400 block">Total Record</span>
+                <span className="font-bold text-emerald-600 text-xs">25 data asli (5 Video + 20 Komentar)</span>
+              </div>
+            </div>
           </div>
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            Healthy (Production)
-          </span>
+
+          <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+            <span>Koneksi: <strong className="text-emerald-700 font-medium">Terhubung Langsung (Pooler 6543)</strong></span>
+            <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-semibold text-[10px]">
+              Tabel Siap • 0 Data
+            </span>
+          </div>
         </div>
 
-        <p className="text-xs text-slate-500">
-          Database PostgreSQL terkelola di <strong>Supabase Cloud</strong> untuk penyimpanan data konten, komentar, dan analisis MBG.
-        </p>
+        {/* 1B: Pembersihan Cache & Local Storage */}
+        <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+              <div className="flex items-center gap-2">
+                <HardDrive className="w-4 h-4 text-amber-600" />
+                <h3 className="text-sm font-bold text-slate-900">
+                  Cache & Penyimpanan Browser (Local Storage)
+                </h3>
+              </div>
+              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-700 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded">
+                Aktif • {storageStats.count} Key Tersimpan
+              </span>
+            </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-          <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
-            <span className="text-[10px] text-slate-400 block">Proyek</span>
-            <span className="font-bold text-slate-800 text-xs">asafik</span>
-          </div>
-          <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
-            <span className="text-[10px] text-slate-400 block">Region</span>
-            <span className="font-bold text-slate-800 text-xs">ap-northeast-1</span>
-          </div>
-          <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
-            <span className="text-[10px] text-slate-400 block">Compute</span>
-            <span className="font-bold text-emerald-600 text-xs">Nano (CPU 3%)</span>
-          </div>
-          <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
-            <span className="text-[10px] text-slate-400 block">Total Record</span>
-            <span className="font-bold text-emerald-600 text-xs">25 data asli (5 Video + 20 Komentar)</span>
-          </div>
-        </div>
+            <p className="text-xs text-slate-500">
+              Membersihkan seluruh data cache yang tersimpan di <strong>LocalStorage browser</strong> (hasil fetch live YouTube/IG, komentar tersimpan, pengaturan sumber & akun) agar semua halaman kembali bersih.
+            </p>
 
-        <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
-          <span>Koneksi: <strong className="text-emerald-700 font-medium">Terhubung Langsung (Pooler 6543)</strong></span>
-          <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-semibold text-[10px]">
-            Tabel Siap • 0 Data
-          </span>
+            <div className="grid grid-cols-3 gap-2 pt-1">
+              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
+                <span className="text-[10px] text-slate-400 block">Penyimpanan</span>
+                <span className="font-bold text-slate-800 text-xs">LocalStorage</span>
+              </div>
+              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
+                <span className="text-[10px] text-slate-400 block">Data Tersimpan</span>
+                <span className="font-bold text-slate-800 text-xs">{storageStats.count} Item</span>
+              </div>
+              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
+                <span className="text-[10px] text-slate-400 block">Ukuran Cache</span>
+                <span className="font-bold text-amber-600 text-xs">{storageStats.size}</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
+            <span className="text-[11px] text-slate-400">
+              Mereset konten, komentar, sumber, dan setting ke default
+            </span>
+            <button
+              type="button"
+              onClick={handleClearCache}
+              disabled={isClearingCache}
+              className="flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
+              title="Bersihkan seluruh data yang tersimpan di LocalStorage browser"
+            >
+              <Trash2 className={`w-3.5 h-3.5 ${isClearingCache ? 'animate-spin' : ''}`} />
+              <span>{isClearingCache ? 'Membersihkan Cache...' : 'Bersihkan Cache (Clear Cache)'}</span>
+            </button>
+          </div>
         </div>
       </div>
 

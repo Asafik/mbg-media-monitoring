@@ -88,11 +88,17 @@ export function useDashboardData() {
         applyContentsToState(customEvent.detail)
       }
     }
+    const cacheClearedHandler = () => {
+      setData(initialDashboardData)
+      setIsLiveFromSupabase(false)
+    }
     window.addEventListener('mbg-youtube-updated', handler)
     window.addEventListener('mbg-instagram-updated', handler)
+    window.addEventListener('mbg-cache-cleared', cacheClearedHandler)
     return () => {
       window.removeEventListener('mbg-youtube-updated', handler)
       window.removeEventListener('mbg-instagram-updated', handler)
+      window.removeEventListener('mbg-cache-cleared', cacheClearedHandler)
     }
   }, [applyContentsToState])
 

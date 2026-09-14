@@ -42,6 +42,15 @@ export const SourcesPage: React.FC = () => {
   const [showAddForm, setShowAddForm] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
 
+  // Dengarkan sinyal pembersihan cache global
+  React.useEffect(() => {
+    const handleCacheCleared = () => {
+      setSourcesList(defaultMonitoredSources)
+    }
+    window.addEventListener('mbg-cache-cleared', handleCacheCleared)
+    return () => window.removeEventListener('mbg-cache-cleared', handleCacheCleared)
+  }, [])
+
   // Form Inputs
   const [newHandle, setNewHandle] = useState('')
   const [newName, setNewName] = useState('')
