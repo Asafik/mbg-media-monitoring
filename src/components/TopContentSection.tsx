@@ -1,7 +1,7 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faInstagram, faYoutube } from '@fortawesome/free-brands-svg-icons'
-import { ArrowRight, MoreVertical } from 'lucide-react'
-import React from 'react'
+import { ArrowRight, Copy, ExternalLink, MoreVertical, Star } from 'lucide-react'
+import React, { useEffect, useRef, useState } from 'react'
 import type { PlatformContentItem } from '../types/dashboard'
 
 interface TopContentSectionProps {
@@ -46,6 +46,20 @@ export const TopContentSection: React.FC<TopContentSectionProps> = ({
   instagram,
   facebook,
 }) => {
+  const [openMenuId, setOpenMenuId] = useState<string | null>(null)
+  const menuRef = useRef<HTMLDivElement>(null)
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(e.target as Node)) {
+        setOpenMenuId(null)
+      }
+    }
+    if (openMenuId) document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [openMenuId])
+
   const renderPlatformColumn = (
     platformName: string,
     icon: React.ReactNode,
@@ -142,13 +156,52 @@ export const TopContentSection: React.FC<TopContentSectionProps> = ({
                 </div>
               </div>
 
-              {/* 3 Dots button */}
-              <button
-                type="button"
-                className="text-slate-300 hover:text-slate-600 p-0.5 rounded transition-colors shrink-0"
-              >
-                <MoreVertical className="w-3.5 h-3.5" />
-              </button>
+              {/* 3 Dots button + Dropdown */}
+              <div className="relative shrink-0" ref={openMenuId === item.id ? menuRef : undefined}>
+                <button
+                  type="button"
+                  onClick={() => setOpenMenuId(openMenuId === item.id ? null : item.id)}
+                  className="text-slate-300 hover:text-slate-600 p-0.5 rounded transition-colors"
+                >
+                  <MoreVertical className="w-3.5 h-3.5" />
+                </button>
+
+                {openMenuId === item.id && (
+                  <div className="absolute right-0 top-6 z-50 w-44 bg-white border border-slate-200 rounded-lg shadow-lg py-1 text-xs">
+                    {item.url && (
+                      <a
+                        href={item.url}
+                        target="_blank"
+                        rel="noreferrer"
+                        onClick={() => setOpenMenuId(null)}
+                        className="flex items-center gap-2.5 px-3 py-2 text-slate-700 hover:bg-slate-50 transition-colors"
+                      >
+                        <ExternalLink className="w-3.5 h-3.5 text-slate-400" />
+                        <span className="font-medium">Buka Konten</span>
+                      </a>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (item.url) navigator.clipboard.writeText(item.url)
+                        setOpenMenuId(null)
+                      }}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                      <Copy className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="font-medium">Salin Link</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setOpenMenuId(null)}
+                      className="w-full flex items-center gap-2.5 px-3 py-2 text-slate-700 hover:bg-slate-50 transition-colors"
+                    >
+                      <Star className="w-3.5 h-3.5 text-slate-400" />
+                      <span className="font-medium">Tandai Penting</span>
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
           ))}
         </div>
