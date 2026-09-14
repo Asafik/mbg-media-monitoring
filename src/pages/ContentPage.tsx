@@ -36,9 +36,46 @@ import {
 } from '../services/facebookService'
 import type { DetailedContentItem } from '../types/dashboard'
 
+/**
+ * Helper deteksi isu kembar/duplikat antar-platform (YouTube, IG, FB):
+ * 1. Thumbnail URL sama persis.
+ * 2. Kesamaan kata kunci judul > 55% pada kata-kata esensial.
+ */
+const areContentsDuplicate = (a: DetailedContentItem, b: DetailedContentItem): boolean => {
+  if (a.id === b.id) return false
+  if (a.thumbnailUrl && b.thumbnailUrl && a.thumbnailUrl === b.thumbnailUrl) return true
+
+  const stopWords = new Set([
+    'dan', 'di', 'ke', 'dari', 'yang', 'untuk', 'pada', 'dengan', 'adalah', 'ini', 'itu',
+    'soal', 'terkait', 'usai', 'buka', 'respons', 'mbg', 'program', 'makan', 'bergizi', 'gratis'
+  ])
+
+  const tokenize = (str: string) =>
+    str
+      .toLowerCase()
+      .replace(/[^\w\s]/g, '')
+      .split(/\s+/)
+      .filter((w) => w.length > 2 && !stopWords.has(w))
+
+  const wordsA = new Set(tokenize(a.title))
+  const wordsB = new Set(tokenize(b.title))
+
+  if (wordsA.size === 0 || wordsB.size === 0) return false
+
+  let intersection = 0
+  wordsA.forEach((w) => {
+    if (wordsB.has(w)) intersection++
+  })
+
+  const minLen = Math.min(wordsA.size, wordsB.size)
+  return intersection / minLen >= 0.55
+}
+
 // Initial content gabungan YouTube + Instagram + Facebook (Tanpa API/Login)
 const sanitizeThumbnails = (items: DetailedContentItem[]): DetailedContentItem[] => {
   return items.map((item) => {
+    if (item.id === 'fb-kompas-1') return sampleFacebookPosts[0]
+    if (item.id === 'fb-detik-2') return sampleFacebookPosts[1]
     if (item.thumbnailUrl.includes('aL3N4447j9A')) {
       return { ...item, thumbnailUrl: 'https://i.ytimg.com/vi/21g5WNyy1eY/hqdefault.jpg' }
     }
@@ -78,6 +115,7 @@ export const ContentPage: React.FC = () => {
   const [isFetchingYouTube, setIsFetchingYouTube] = useState(false)
   const [isFetchingInstagram, setIsFetchingInstagram] = useState(false)
   const [isFetchingFacebook, setIsFetchingFacebook] = useState(false)
+  const [deduplicateCrossPlatform, setDeduplicateCrossPlatform] = useState<boolean>(true)
   const [syncSuccessMessage, setSyncSuccessMessage] = useState<string | null>(null)
 
   const sentiments = ['Semua', 'positif', 'negatif', 'netral']
@@ -173,7 +211,7 @@ export const ContentPage: React.FC = () => {
   }
 
   const filteredContents = useMemo(() => {
-    const result = contentList.filter((item) => {
+    let result = contentList.filter((item) => {
       const matchSearch =
         item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         item.author.toLowerCase().includes(searchTerm.toLowerCase())
@@ -183,6 +221,17 @@ export const ContentPage: React.FC = () => {
         selectedPlatform === 'Semua' || item.platform === selectedPlatform
       return matchSearch && matchSentiment && matchPlatform
     })
+
+    // Saring konten duplikat/kembar antar platform jika filter anti-duplikasi aktif
+    if (deduplicateCrossPlatform) {
+      const seen: DetailedContentItem[] = []
+      result = result.filter((item) => {
+        const isDuplicate = seen.some((existing) => areContentsDuplicate(existing, item))
+        if (isDuplicate) return false
+        seen.push(item)
+        return true
+      })
+    }
 
     // Sorting
     result.sort((a, b) => {
@@ -196,7 +245,21 @@ export const ContentPage: React.FC = () => {
     })
 
     return result
-  }, [contentList, searchTerm, selectedSentiment, selectedPlatform, sortBy])
+  }, [contentList, searchTerm, selectedSentiment, selectedPlatform, sortBy, deduplicateCrossPlatform])
+
+  // Hitung jumlah isu kembar yang disaring
+  const duplicateCount = useMemo(() => {
+    let count = 0
+    const seen: DetailedContentItem[] = []
+    contentList.forEach((item) => {
+      if (seen.some((existing) => areContentsDuplicate(existing, item))) {
+        count++
+      } else {
+        seen.push(item)
+      }
+    })
+    return count
+  }, [contentList])
 
   // Hitung total akumulasi views & komentar dari video yang ada di list
   const totalViewsNum = useMemo(() => {
@@ -550,7 +613,7 @@ export const ContentPage: React.FC = () => {
         {/* Platform Tabs */}
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-slate-500 font-medium mr-1">Platform:</span>
-          {(['Semua', 'YouTube', 'Instagram'] as const).map((p) => (
+          {(['Semua', 'YouTube', 'Instagram', 'Facebook'] as const).map((p) => (
             <button
               key={p}
               type="button"
@@ -561,15 +624,40 @@ export const ContentPage: React.FC = () => {
                     ? 'bg-red-600 text-white shadow-xs'
                     : p === 'Instagram'
                     ? 'bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 text-white shadow-xs'
-                    : 'bg-blue-600 text-white shadow-xs'
+                    : p === 'Facebook'
+                    ? 'bg-blue-600 text-white shadow-xs'
+                    : 'bg-slate-800 text-white shadow-xs'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
             >
               {p === 'YouTube' && <FontAwesomeIcon icon={faYoutube} className="mr-1 text-xs" />}
               {p === 'Instagram' && <FontAwesomeIcon icon={faInstagram} className="mr-1 text-xs" />}
+              {p === 'Facebook' && <FontAwesomeIcon icon={faFacebook} className="mr-1 text-xs" />}
               {p}
             </button>
           ))}
+        </div>
+
+        {/* Anti-Duplikasi Cross-Platform Toggle */}
+        <div className="flex items-center gap-2 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg">
+          <label className="flex items-center gap-2 cursor-pointer text-xs font-semibold text-slate-700 select-none">
+            <input
+              type="checkbox"
+              checked={deduplicateCrossPlatform}
+              onChange={(e) => setDeduplicateCrossPlatform(e.target.checked)}
+              className="rounded text-blue-600 focus:ring-blue-500 cursor-pointer w-3.5 h-3.5"
+            />
+            <span className="flex items-center gap-1.5">
+              <span>Saring Isu Duplikat</span>
+              {duplicateCount > 0 && (
+                <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                  deduplicateCrossPlatform ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-200 text-slate-600'
+                }`}>
+                  {deduplicateCrossPlatform ? `${duplicateCount} disaring` : `${duplicateCount} duplikat`}
+                </span>
+              )}
+            </span>
+          </label>
         </div>
 
         {/* Sentiment Filter */}
