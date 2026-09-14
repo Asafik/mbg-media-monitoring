@@ -1,3 +1,5 @@
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import { faInstagram } from '@fortawesome/free-brands-svg-icons'
 import {
   Activity,
   Bell,
@@ -15,6 +17,13 @@ import {
   Zap,
 } from 'lucide-react'
 import React, { useState } from 'react'
+
+const DEFAULT_IG_ACCOUNTS = [
+  { username: '@kompascom', label: 'Media Berita Nasional', isDefault: true },
+  { username: '@tribunnews', label: 'Jaringan Berita Daerah', isDefault: true },
+  { username: '@narasinewsroom', label: 'Jurnalisme Kritis & Investigasi', isDefault: true },
+  { username: '@kumparancom', label: 'Media Digital & Warganet', isDefault: true },
+]
 
 export const SettingsPage: React.FC = () => {
   // Keyword Utama (Wajib ada pada konten)
@@ -37,6 +46,21 @@ export const SettingsPage: React.FC = () => {
     'susu sapi',
   ])
   const [newIssue, setNewIssue] = useState('')
+
+  // Monitored Instagram Public Accounts (Default 4 Media Besar)
+  const [instagramAccounts, setInstagramAccounts] = useState<
+    Array<{ username: string; label: string; isDefault: boolean }>
+  >(() => {
+    try {
+      const saved = localStorage.getItem('mbg_instagram_accounts')
+      if (saved) return JSON.parse(saved)
+    } catch {
+      // Fallback
+    }
+    return DEFAULT_IG_ACCOUNTS
+  })
+  const [newIgAccount, setNewIgAccount] = useState('')
+  const [newIgLabel, setNewIgLabel] = useState('')
 
   // Interval crawler default aman: 6 jam
   const [syncInterval, setSyncInterval] = useState('360') // 360 min = 6 jam
@@ -124,7 +148,50 @@ export const SettingsPage: React.FC = () => {
     setIssueKeywords(issueKeywords.filter((k) => k !== kw))
   }
 
+  const handleAddInstagramAccount = () => {
+    let cleanUser = newIgAccount.trim()
+    if (!cleanUser) return
+    if (!cleanUser.startsWith('@')) {
+      cleanUser = `@${cleanUser}`
+    }
+    if (instagramAccounts.some((a) => a.username.toLowerCase() === cleanUser.toLowerCase())) {
+      return
+    }
+    const updated = [
+      ...instagramAccounts,
+      {
+        username: cleanUser,
+        label: newIgLabel.trim() || 'Akun Publik Tambahan',
+        isDefault: false,
+      },
+    ]
+    setInstagramAccounts(updated)
+    try {
+      localStorage.setItem('mbg_instagram_accounts', JSON.stringify(updated))
+    } catch {}
+    setNewIgAccount('')
+    setNewIgLabel('')
+  }
+
+  const handleRemoveInstagramAccount = (username: string) => {
+    const updated = instagramAccounts.filter((a) => a.username !== username)
+    setInstagramAccounts(updated)
+    try {
+      localStorage.setItem('mbg_instagram_accounts', JSON.stringify(updated))
+    } catch {}
+  }
+
+  const handleResetInstagramAccounts = () => {
+    setInstagramAccounts(DEFAULT_IG_ACCOUNTS)
+    try {
+      localStorage.setItem('mbg_instagram_accounts', JSON.stringify(DEFAULT_IG_ACCOUNTS))
+    } catch {}
+  }
+
   const handleSave = () => {
+    try {
+      localStorage.setItem('mbg_instagram_accounts', JSON.stringify(instagramAccounts))
+    } catch {}
     setSavedSuccess(true)
     setTimeout(() => setSavedSuccess(false), 3000)
   }
@@ -367,7 +434,98 @@ export const SettingsPage: React.FC = () => {
         </div>
       </div>
 
-      {/* SECTION 3: DUA JENIS KEYWORD (UTAMA & ISU TERKAIT) */}
+      {/* SECTION 3: DAFTAR AKUN INSTAGRAM PUBLIK YANG DIPANTAU (DEFAULT 4 MEDIA BESAR) */}
+      <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <FontAwesomeIcon icon={faInstagram} className="text-base text-fuchsia-600" />
+              <h3 className="text-sm font-bold text-slate-900">
+                Target Akun Publik Instagram (Instagram Whitelist Sources)
+              </h3>
+              <span className="bg-fuchsia-50 text-fuchsia-700 border border-fuchsia-200 text-[10px] font-bold px-2 py-0.5 rounded">
+                {instagramAccounts.length} Akun Terpantau
+              </span>
+            </div>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Sistem memantau postingan & respon warganet seputar MBG secara otomatis dari akun media publik terpercaya tanpa memerlukan API key maupun login kredensial.
+            </p>
+          </div>
+
+          <button
+            type="button"
+            onClick={handleResetInstagramAccounts}
+            className="text-xs text-slate-500 hover:text-slate-800 underline font-medium self-start sm:self-auto cursor-pointer"
+            title="Kembalikan ke 4 Media Besar Default"
+          >
+            Reset ke 4 Media Besar
+          </button>
+        </div>
+
+        {/* Input Tambah Akun Baru */}
+        <div className="flex flex-col sm:flex-row gap-2">
+          <input
+            type="text"
+            placeholder="Username IG, cth: @kemdikbud.ri atau @dinkesjabar..."
+            value={newIgAccount}
+            onChange={(e) => setNewIgAccount(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddInstagramAccount()}
+            className="flex-1 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500"
+          />
+          <input
+            type="text"
+            placeholder="Kategori / Label (opsional, cth: Lembaga Pemerintah)..."
+            value={newIgLabel}
+            onChange={(e) => setNewIgLabel(e.target.value)}
+            onKeyDown={(e) => e.key === 'Enter' && handleAddInstagramAccount()}
+            className="sm:w-64 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-fuchsia-500/20 focus:border-fuchsia-500"
+          />
+          <button
+            type="button"
+            onClick={handleAddInstagramAccount}
+            className="bg-fuchsia-600 hover:bg-fuchsia-700 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg flex items-center justify-center gap-1 transition-colors cursor-pointer shrink-0"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            <span>Tambah Akun</span>
+          </button>
+        </div>
+
+        {/* List Akun yang Dipantau */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+          {instagramAccounts.map((acc) => (
+            <div
+              key={acc.username}
+              className="p-3 bg-slate-50 border border-slate-200/80 rounded-lg flex items-center justify-between gap-2 text-xs"
+            >
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5">
+                  <span className="font-bold text-slate-900 truncate">
+                    {acc.username}
+                  </span>
+                  {acc.isDefault && (
+                    <span className="text-[9.5px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 py-0.2 rounded">
+                      Default
+                    </span>
+                  )}
+                </div>
+                <span className="text-[11px] text-slate-500 block truncate mt-0.5">
+                  {acc.label}
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleRemoveInstagramAccount(acc.username)}
+                className="text-slate-400 hover:text-rose-600 p-1 transition-colors cursor-pointer shrink-0"
+                title={`Hapus ${acc.username}`}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* SECTION 4: DUA JENIS KEYWORD (UTAMA & ISU TERKAIT) */}
       <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-xs space-y-5">
         <div className="border-b border-slate-100 pb-3">
           <div className="flex items-center gap-2">
