@@ -212,9 +212,19 @@ export const SettingsPage: React.FC = () => {
   const handleClearCache = () => {
     setIsClearingCache(true)
     setTimeout(() => {
+      // Hapus semua key localStorage milik app ini
+      const keysToRemove = Object.keys(localStorage).filter((k) => k.startsWith('mbg_'))
+      const totalKeys = keysToRemove.length
+      keysToRemove.forEach((k) => localStorage.removeItem(k))
+
+      // Reset state Instagram accounts ke default
+      setInstagramAccounts(DEFAULT_IG_ACCOUNTS)
+
       setIsClearingCache(false)
-      setCacheClearMessage('Cache sistem (4.6 MB / 1.240 keys) berhasil dibersihkan dan di-refresh!')
-      setTimeout(() => setCacheClearMessage(null), 3500)
+      setCacheClearMessage(
+        `Cache berhasil dibersihkan! ${totalKeys} item lokal dihapus. Pengaturan direset ke default.`
+      )
+      setTimeout(() => setCacheClearMessage(null), 4000)
     }, 850)
   }
 
