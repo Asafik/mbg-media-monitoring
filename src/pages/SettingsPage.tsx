@@ -5,7 +5,6 @@ import {
   Bell,
   Check,
   Database,
-  HardDrive,
   Info,
   Plus,
   Radio,
@@ -14,7 +13,6 @@ import {
   ShieldAlert,
   Tag,
   Trash2,
-  Zap,
 } from 'lucide-react'
 import React, { useState } from 'react'
 
@@ -71,10 +69,8 @@ export const SettingsPage: React.FC = () => {
   const [requireSpikeCondition, setRequireSpikeCondition] = useState(true)
   const [emailAlerts, setEmailAlerts] = useState(true)
 
-  // Status Actions (Cache, Ping API, Save)
+  // Status Actions (Ping API, Save)
   const [savedSuccess, setSavedSuccess] = useState(false)
-  const [isClearingCache, setIsClearingCache] = useState(false)
-  const [cacheClearMessage, setCacheClearMessage] = useState<string | null>(null)
   const [isTestingApi, setIsTestingApi] = useState(false)
   const [apiTestMessage, setApiTestMessage] = useState<string | null>(null)
 
@@ -209,24 +205,6 @@ export const SettingsPage: React.FC = () => {
     setTimeout(() => setSavedSuccess(false), 3000)
   }
 
-  const handleClearCache = () => {
-    setIsClearingCache(true)
-    setTimeout(() => {
-      // Hapus semua key localStorage milik app ini
-      const keysToRemove = Object.keys(localStorage).filter((k) => k.startsWith('mbg_'))
-      const totalKeys = keysToRemove.length
-      keysToRemove.forEach((k) => localStorage.removeItem(k))
-
-      // Reset state Instagram accounts ke default
-      setInstagramAccounts(DEFAULT_IG_ACCOUNTS)
-
-      setIsClearingCache(false)
-      setCacheClearMessage(
-        `Cache berhasil dibersihkan! ${totalKeys} item lokal dihapus. Pengaturan direset ke default.`
-      )
-      setTimeout(() => setCacheClearMessage(null), 4000)
-    }, 850)
-  }
 
   const handleTestAllApi = () => {
     setIsTestingApi(true)
@@ -245,7 +223,7 @@ export const SettingsPage: React.FC = () => {
           Pengaturan Sistem, Database & Sumber Data
         </h2>
         <p className="text-xs text-slate-500 mt-1">
-          Pusat kontrol database, manajemen cache data, status koneksi 4 API platform sosial media, dan logika pemantauan crawler.
+          Pusat kontrol database, status koneksi 4 API platform sosial media, dan logika pemantauan crawler.
         </p>
       </div>
 
@@ -257,13 +235,6 @@ export const SettingsPage: React.FC = () => {
         </div>
       )}
 
-      {cacheClearMessage && (
-        <div className="p-3 bg-blue-50 border border-blue-200 text-blue-800 rounded-lg text-xs flex items-center gap-2 animate-in fade-in">
-          <Zap className="w-4 h-4 text-blue-600 shrink-0" />
-          <span>{cacheClearMessage}</span>
-        </div>
-      )}
-
       {apiTestMessage && (
         <div className="p-3 bg-amber-50 border border-amber-200 text-amber-900 rounded-lg text-xs flex items-center gap-2 animate-in fade-in">
           <Activity className="w-4 h-4 text-amber-600 shrink-0" />
@@ -271,106 +242,49 @@ export const SettingsPage: React.FC = () => {
         </div>
       )}
 
-      {/* SECTION 1: STATUS DATABASE & MANAJEMEN CACHE (NEW) */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* 1A: Status Database (Supabase Cloud Health) */}
-        <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <div className="flex items-center gap-2">
-                <Database className="w-4 h-4 text-emerald-600" />
-                <h3 className="text-sm font-bold text-slate-900">
-                  Status Database Supabase (asafik)
-                </h3>
-              </div>
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                Healthy (Production)
-              </span>
-            </div>
-
-            <p className="text-xs text-slate-500">
-              Database PostgreSQL terkelola di <strong>Supabase Cloud</strong> untuk penyimpanan data konten, komentar, dan analisis MBG.
-            </p>
-
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
-              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
-                <span className="text-[10px] text-slate-400 block">Proyek</span>
-                <span className="font-bold text-slate-800 text-xs">asafik</span>
-              </div>
-              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
-                <span className="text-[10px] text-slate-400 block">Region</span>
-                <span className="font-bold text-slate-800 text-xs">ap-northeast-1</span>
-              </div>
-              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
-                <span className="text-[10px] text-slate-400 block">Compute</span>
-                <span className="font-bold text-emerald-600 text-xs">Nano (CPU 3%)</span>
-              </div>
-              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
-                <span className="text-[10px] text-slate-400 block">Total Record</span>
-                <span className="font-bold text-emerald-600 text-xs">25 data asli (5 Video + 20 Komentar)</span>
-              </div>
-            </div>
+      {/* SECTION 1: STATUS DATABASE SUPABASE */}
+      <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-xs space-y-4">
+        <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
+          <div className="flex items-center gap-2">
+            <Database className="w-4 h-4 text-emerald-600" />
+            <h3 className="text-sm font-bold text-slate-900">
+              Status Database Supabase (asafik)
+            </h3>
           </div>
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            Healthy (Production)
+          </span>
+        </div>
 
-          <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
-            <span>Koneksi: <strong className="text-emerald-700 font-medium">Terhubung Langsung (Pooler 6543)</strong></span>
-            <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-semibold text-[10px]">
-              Tabel Siap • 0 Data
-            </span>
+        <p className="text-xs text-slate-500">
+          Database PostgreSQL terkelola di <strong>Supabase Cloud</strong> untuk penyimpanan data konten, komentar, dan analisis MBG.
+        </p>
+
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-1">
+          <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
+            <span className="text-[10px] text-slate-400 block">Proyek</span>
+            <span className="font-bold text-slate-800 text-xs">asafik</span>
+          </div>
+          <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
+            <span className="text-[10px] text-slate-400 block">Region</span>
+            <span className="font-bold text-slate-800 text-xs">ap-northeast-1</span>
+          </div>
+          <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
+            <span className="text-[10px] text-slate-400 block">Compute</span>
+            <span className="font-bold text-emerald-600 text-xs">Nano (CPU 3%)</span>
+          </div>
+          <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
+            <span className="text-[10px] text-slate-400 block">Total Record</span>
+            <span className="font-bold text-emerald-600 text-xs">25 data asli (5 Video + 20 Komentar)</span>
           </div>
         </div>
 
-        {/* 1B: Cache Management & Clear Cache Action */}
-        <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
-          <div className="space-y-3">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
-              <div className="flex items-center gap-2">
-                <HardDrive className="w-4 h-4 text-blue-600" />
-                <h3 className="text-sm font-bold text-slate-900">
-                  Manajemen Cache Sistem (In-Memory Cache)
-                </h3>
-              </div>
-              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded">
-                Hit Rate: 94.2%
-              </span>
-            </div>
-
-            <p className="text-xs text-slate-500">
-              Cache query ringkasan dasbor dan grafik untuk mempercepat loading tanpa membebani database.
-            </p>
-
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 pt-1">
-              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
-                <span className="text-[10px] text-slate-400 block">Driver Cache</span>
-                <span className="font-bold text-slate-800 text-xs">Redis / Memory</span>
-              </div>
-              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
-                <span className="text-[10px] text-slate-400 block">Total Cache Keys</span>
-                <span className="font-bold text-slate-800 text-xs">1.240 Keys</span>
-              </div>
-              <div className="p-2.5 bg-slate-50 rounded-lg border border-slate-200/80">
-                <span className="text-[10px] text-slate-400 block">Ukuran Cache</span>
-                <span className="font-bold text-blue-600 text-xs">4.6 MB</span>
-              </div>
-            </div>
-          </div>
-
-          <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-            <span className="text-[11px] text-slate-400">
-              TTL Cache: Otomatis kedaluwarsa tiap 15 menit
-            </span>
-            <button
-              type="button"
-              onClick={handleClearCache}
-              disabled={isClearingCache}
-              className="flex items-center gap-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer disabled:opacity-50"
-              title="Bersihkan seluruh cache Redis agar sistem query langsung ke DB"
-            >
-              <Trash2 className={`w-3.5 h-3.5 ${isClearingCache ? 'animate-spin' : ''}`} />
-              <span>{isClearingCache ? 'Membersihkan Cache...' : 'Bersihkan Cache (Clear Cache)'}</span>
-            </button>
-          </div>
+        <div className="pt-3 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
+          <span>Koneksi: <strong className="text-emerald-700 font-medium">Terhubung Langsung (Pooler 6543)</strong></span>
+          <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-semibold text-[10px]">
+            Tabel Siap • 0 Data
+          </span>
         </div>
       </div>
 
