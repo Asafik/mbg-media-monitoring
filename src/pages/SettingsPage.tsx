@@ -80,13 +80,13 @@ export const SettingsPage: React.FC = () => {
     },
     {
       platform: 'Instagram',
-      mode: 'Instagram Graph API / Hashtag API',
-      status: 'Connected',
+      mode: 'Public Open Graph Scraper (Tanpa API & Login)',
+      status: 'Active (Tanpa API)',
       statusColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
-      lastSync: '40 menit lalu',
-      itemsFound: '18 post',
-      latency: '195 ms',
-      quotaUsed: '31% dari kuota harian',
+      lastSync: 'Baru saja (Open Graph)',
+      itemsFound: '5 konten publik MBG',
+      latency: '115 ms',
+      quotaUsed: 'Tanpa Batas (Bebas Kuota/Login)',
       errorCount: 0,
     },
     {
@@ -142,7 +142,7 @@ export const SettingsPage: React.FC = () => {
     setIsTestingApi(true)
     setTimeout(() => {
       setIsTestingApi(false)
-      setApiTestMessage('Uji koneksi selesai: 3/4 Platform API respon cepat, 1 platform (Facebook) mendekati rate-limit.')
+      setApiTestMessage('Uji koneksi selesai: YouTube, TikTok & Instagram (Public Scraper) aktif optimal, 1 platform (Facebook) mendekati rate-limit.')
       setTimeout(() => setApiTestMessage(null), 4000)
     }, 1100)
   }
