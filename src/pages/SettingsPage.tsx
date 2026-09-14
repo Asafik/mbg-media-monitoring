@@ -159,14 +159,14 @@ export const SettingsPage: React.FC = () => {
     },
     {
       platform: 'Facebook',
-      mode: 'Meta Public Content Pages API',
-      status: 'Warning Rate Limit',
-      statusColor: 'text-amber-800 bg-amber-50 border-amber-200',
-      lastSync: '3 jam lalu',
-      itemsFound: '12 post',
-      latency: '420 ms',
-      quotaUsed: '88% dari kuota (Rate limit)',
-      errorCount: 2,
+      mode: 'Public Fanspage News Crawler (Tanpa API & Login)',
+      status: 'Active (Tanpa API)',
+      statusColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+      lastSync: 'Baru saja (Crawler Aktif)',
+      itemsFound: '5 post fanspage MBG',
+      latency: '128 ms',
+      quotaUsed: 'Tanpa Batas (Bebas Kuota/Login)',
+      errorCount: 0,
     },
   ]
 
@@ -289,7 +289,7 @@ export const SettingsPage: React.FC = () => {
     setIsTestingApi(true)
     setTimeout(() => {
       setIsTestingApi(false)
-      setApiTestMessage('Uji koneksi selesai: YouTube, TikTok & Instagram (Public Scraper) aktif optimal, 1 platform (Facebook) mendekati rate-limit.')
+      setApiTestMessage('Uji koneksi selesai: 4 Platform (YouTube API, TikTok, Instagram Scraper & Facebook Crawler) aktif optimal dan siap pantau MBG.')
       setTimeout(() => setApiTestMessage(null), 4000)
     }, 1100)
   }
@@ -451,7 +451,7 @@ export const SettingsPage: React.FC = () => {
 
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <span className="text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded">
-              3/4 Normal • 1 Mendekati Kuota
+              4/4 Normal & Aktif Optimal
             </span>
             <button
               type="button"
