@@ -21,6 +21,68 @@
   }
 }
 
+/* ── Shimmer / Skeleton ───────────────────────────────────────── */
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(
+    90deg,
+    #e2e8f0 25%,
+    #f1f5f9 50%,
+    #e2e8f0 75%
+  );
+  background-size: 800px 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 6px;
+}
+
+/* ── Entry animations ─────────────────────────────────────────── */
+@keyframes fadeSlideUp {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-up {
+  animation: fadeSlideUp 0.45s ease-out both;
+}
+
+/* stagger delays for children */
+.animate-fade-up:nth-child(1) { animation-delay: 0ms; }
+.animate-fade-up:nth-child(2) { animation-delay: 60ms; }
+.animate-fade-up:nth-child(3) { animation-delay: 120ms; }
+.animate-fade-up:nth-child(4) { animation-delay: 180ms; }
+.animate-fade-up:nth-child(5) { animation-delay: 240ms; }
+
+/* section-level stagger for dashboard rows */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-section {
+  animation: fadeSlideUp 0.5s ease-out both;
+}
+.animate-section-delay-1 { animation-delay: 80ms; }
+.animate-section-delay-2 { animation-delay: 180ms; }
+.animate-section-delay-3 { animation-delay: 280ms; }
+.animate-section-delay-4 { animation-delay: 380ms; }
+
+/* chart bar grow animation */
+@keyframes growBar {
+  from { transform: scaleY(0); transform-origin: bottom; }
+  to   { transform: scaleY(1); transform-origin: bottom; }
+}
+
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 6px;

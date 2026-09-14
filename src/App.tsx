@@ -3,6 +3,7 @@ import { Header } from './components/Header'
 import { KeywordCloud } from './components/KeywordCloud'
 import { KpiCards } from './components/KpiCards'
 import { Sidebar } from './components/Sidebar'
+import { SkeletonDashboard } from './components/SkeletonDashboard'
 import { TopContentSection } from './components/TopContentSection'
 import { TopicBreakdown } from './components/TopicBreakdown'
 import { PlatformBarChart } from './components/charts/PlatformBarChart'
@@ -47,6 +48,7 @@ function App() {
   const {
     data,
     selectedPeriod,
+    isLoading,
     isRefreshing,
     handlePeriodChange,
     refreshData,
@@ -72,10 +74,13 @@ function App() {
         return <SettingsPage />
       case 'dashboard':
       default:
+        // Show skeleton shimmer while initial data loads
+        if (isLoading) return <SkeletonDashboard />
+
         return (
           <div className="space-y-5">
             {/* Dashboard Title & Subtitle */}
-            <div>
+            <div className="animate-section">
               <h2 className="text-2xl font-bold text-slate-900 tracking-tight leading-tight">
                 Dashboard
               </h2>
@@ -85,10 +90,12 @@ function App() {
             </div>
 
             {/* Row 1: KPI Summary Cards */}
-            <KpiCards items={data.kpiList} />
+            <div className="animate-section animate-section-delay-1">
+              <KpiCards items={data.kpiList} />
+            </div>
 
             {/* Row 2: Charts Row (Tren Sentimen, Distribusi Sentimen, Jumlah Konten) */}
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 animate-section animate-section-delay-2">
               <div className="lg:col-span-5 min-h-[255px]">
                 <SentimentTrendChart data={data.sentimentTrends} />
               </div>
@@ -104,15 +111,17 @@ function App() {
             </div>
 
             {/* Row 3: Top 5 Konten per Platform */}
-            <TopContentSection
-              youtube={data.contentsByPlatform.youtube}
-              tiktok={data.contentsByPlatform.tiktok}
-              instagram={data.contentsByPlatform.instagram}
-              facebook={data.contentsByPlatform.facebook}
-            />
+            <div className="animate-section animate-section-delay-3">
+              <TopContentSection
+                youtube={data.contentsByPlatform.youtube}
+                tiktok={data.contentsByPlatform.tiktok}
+                instagram={data.contentsByPlatform.instagram}
+                facebook={data.contentsByPlatform.facebook}
+              />
+            </div>
 
             {/* Row 4: Topik yang Sering Dibahas & Keyword Populer */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 pb-8 animate-section animate-section-delay-4">
               <div className="min-h-[260px]">
                 <TopicBreakdown topics={data.topics} />
               </div>

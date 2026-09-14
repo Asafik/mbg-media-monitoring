@@ -89,6 +89,20 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
               <stop offset="85%" stopColor="#ef4444" stopOpacity="0.04" />
               <stop offset="100%" stopColor="#ef4444" stopOpacity="0.0" />
             </linearGradient>
+            <style>{`
+              .line-draw {
+                stroke-dasharray: 1;
+                stroke-dashoffset: 1;
+                pathLength: 1;
+                animation: drawLine 1s ease-out forwards;
+              }
+              .line-draw-delay1 { animation-delay: 0.05s; }
+              .line-draw-delay2 { animation-delay: 0.15s; }
+              .line-draw-delay3 { animation-delay: 0.25s; }
+              @keyframes drawLine {
+                to { stroke-dashoffset: 0; }
+              }
+            `}</style>
           </defs>
 
           {/* Y Grid Lines & Labels */}
@@ -152,6 +166,8 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
             strokeWidth="1.9"
             strokeLinecap="round"
             strokeLinejoin="round"
+            pathLength="1"
+            className="line-draw line-draw-delay1"
           />
 
           {/* Line 2: Positif (Emerald Green) */}
@@ -162,6 +178,8 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
             strokeWidth="1.9"
             strokeLinecap="round"
             strokeLinejoin="round"
+            pathLength="1"
+            className="line-draw line-draw-delay2"
           />
 
           {/* Line 3: Negatif (Rose Red) */}
@@ -172,6 +190,8 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
             strokeWidth="2.1"
             strokeLinecap="round"
             strokeLinejoin="round"
+            pathLength="1"
+            className="line-draw line-draw-delay3"
           />
 
           {/* Dots on data points */}

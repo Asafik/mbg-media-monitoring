@@ -66,6 +66,20 @@ export const PlatformBarChart: React.FC<PlatformBarChartProps> = ({ data }) => {
               <stop offset="40%" stopColor="#ec4899" />
               <stop offset="100%" stopColor="#8b5cf6" />
             </linearGradient>
+            <style>{`
+              @keyframes barGrow {
+                from { transform: scaleY(0); }
+                to   { transform: scaleY(1); }
+              }
+              .bar-animated {
+                transform-origin: center ${baselineY}px;
+                animation: barGrow 0.6s cubic-bezier(0.34,1.56,0.64,1) both;
+              }
+              .bar-d0 { animation-delay: 0.05s; }
+              .bar-d1 { animation-delay: 0.15s; }
+              .bar-d2 { animation-delay: 0.25s; }
+              .bar-d3 { animation-delay: 0.35s; }
+            `}</style>
           </defs>
 
           {/* Left Y Axis line */}
@@ -145,7 +159,7 @@ export const PlatformBarChart: React.FC<PlatformBarChartProps> = ({ data }) => {
                 <path
                   d={barPath}
                   fill={config.barColor}
-                  className="transition-opacity duration-200 group-hover:opacity-90"
+                  className={`transition-opacity duration-200 group-hover:opacity-90 bar-animated bar-d${idx}`}
                 />
 
                 {/* Platform Icon */}

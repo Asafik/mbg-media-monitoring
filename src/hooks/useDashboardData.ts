@@ -10,6 +10,7 @@ import type {
 export function useDashboardData() {
   const [data, setData] = useState<DashboardData>(initialDashboardData)
   const [selectedPeriod, setSelectedPeriod] = useState<string>(initialDashboardData.period)
+  const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isLiveFromSupabase, setIsLiveFromSupabase] = useState(false)
 
@@ -45,12 +46,20 @@ export function useDashboardData() {
   }, [])
 
   useEffect(() => {
-    if (!isSupabaseConfigured) return
+    // Simulate initial load delay for mock data (so skeleton is always visible)
+    const mockDelay = !isSupabaseConfigured
+      ? new Promise<void>((resolve) => setTimeout(resolve, 900))
+      : Promise.resolve()
 
     let ignore = false
 
     async function loadData() {
       try {
+        await mockDelay
+        if (!ignore) setIsLoading(false)
+
+        if (!isSupabaseConfigured) return
+
         const { data: contentsData, error } = await supabase
           .from('contents')
           .select('*')
@@ -60,7 +69,7 @@ export function useDashboardData() {
           applyContentsToState(contentsData as DetailedContentItem[])
         }
       } catch {
-        // Silently fallback
+        if (!ignore) setIsLoading(false)
       }
     }
 
@@ -123,6 +132,7 @@ export function useDashboardData() {
   return {
     data,
     selectedPeriod,
+    isLoading,
     isRefreshing,
     isLiveFromSupabase,
     handlePeriodChange,

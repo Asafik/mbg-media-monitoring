@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import type { SentimentDistribution } from '../../types/dashboard'
 
 interface SentimentDonutChartProps {
@@ -10,6 +10,15 @@ export const SentimentDonutChart: React.FC<SentimentDonutChartProps> = ({
   data,
   totalCount,
 }) => {
+  const [animated, setAnimated] = useState(false)
+
+  useEffect(() => {
+    // Small delay so the initial render sets offset=circumference first,
+    // then React commits the animated state that transitions to final offset
+    const t = setTimeout(() => setAnimated(true), 80)
+    return () => clearTimeout(t)
+  }, [])
+
   // SVG Donut calculation
   const size = 180
   const center = size / 2
@@ -49,7 +58,7 @@ export const SentimentDonutChart: React.FC<SentimentDonutChartProps> = ({
         {/* SVG Donut */}
         <div className="relative w-40 h-40 flex items-center justify-center shrink-0">
           <svg className="w-full h-full -rotate-90" viewBox={`0 0 ${size} ${size}`}>
-            {segments.map((segment) => (
+            {segments.map((segment, idx) => (
               <circle
                 key={segment.name}
                 cx={center}
@@ -59,9 +68,15 @@ export const SentimentDonutChart: React.FC<SentimentDonutChartProps> = ({
                 stroke={segment.color}
                 strokeWidth={strokeWidth}
                 strokeDasharray={segment.strokeDasharray}
-                strokeDashoffset={segment.strokeDashoffset}
+                strokeDashoffset={
+                  animated
+                    ? segment.strokeDashoffset
+                    : segment.strokeDashoffset - circumference
+                }
                 strokeLinecap="butt"
-                className="transition-all duration-300"
+                style={{
+                  transition: `stroke-dashoffset 0.8s cubic-bezier(0.4,0,0.2,1) ${idx * 0.15}s`,
+                }}
               />
             ))}
           </svg>
