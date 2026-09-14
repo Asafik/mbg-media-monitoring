@@ -24,7 +24,7 @@ export const TopicsPage: React.FC = () => {
   })
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 animate-section">
       {/* Title & Description */}
       <div>
         <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">

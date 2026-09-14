@@ -55,7 +55,7 @@ export const KeywordsPage: React.FC = () => {
   const selectedMeta = keywordDataset.find((k) => k.text === selectedKeyword)
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 animate-section">
       {/* Title & Description */}
       <div>
         <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">

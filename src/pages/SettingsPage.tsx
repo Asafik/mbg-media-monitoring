@@ -228,7 +228,7 @@ export const SettingsPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-6 pb-10">
+    <div className="space-y-6 pb-10 animate-section">
       {/* Title */}
       <div>
         <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">

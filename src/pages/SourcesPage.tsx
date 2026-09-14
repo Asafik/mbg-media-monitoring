@@ -170,7 +170,7 @@ export const SourcesPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 animate-section">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>

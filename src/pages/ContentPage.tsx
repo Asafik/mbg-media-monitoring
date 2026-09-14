@@ -185,7 +185,7 @@ export const ContentPage: React.FC = () => {
   }
 
   return (
-    <div className="space-y-5 relative">
+    <div className="space-y-5 relative animate-section">
       {/* Loading Overlay saat menarik data dari YouTube API */}
       {isFetchingYouTube && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs animate-in fade-in duration-200">
