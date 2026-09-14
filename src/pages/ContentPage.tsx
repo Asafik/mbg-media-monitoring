@@ -37,11 +37,26 @@ import {
 import type { DetailedContentItem } from '../types/dashboard'
 
 // Initial content gabungan YouTube + Instagram + Facebook (Tanpa API/Login)
-const initialCombinedContents: DetailedContentItem[] = [
+const sanitizeThumbnails = (items: DetailedContentItem[]): DetailedContentItem[] => {
+  return items.map((item) => {
+    if (item.thumbnailUrl.includes('aL3N4447j9A')) {
+      return { ...item, thumbnailUrl: 'https://i.ytimg.com/vi/21g5WNyy1eY/hqdefault.jpg' }
+    }
+    if (item.thumbnailUrl.includes('u5h3Yq3n5aI')) {
+      return { ...item, thumbnailUrl: 'https://i.ytimg.com/vi/2gIobI9TvnA/hqdefault.jpg' }
+    }
+    if (item.thumbnailUrl.includes('m0G8s7d8H_s')) {
+      return { ...item, thumbnailUrl: 'https://i.ytimg.com/vi/6lTjTgXMbaw/hqdefault.jpg' }
+    }
+    return item
+  })
+}
+
+const initialCombinedContents: DetailedContentItem[] = sanitizeThumbnails([
   ...allDetailedContents.filter((item) => item.platform === 'YouTube'),
   ...sampleInstagramPosts,
   ...sampleFacebookPosts,
-]
+])
 
 export const ContentPage: React.FC = () => {
   const [contentList, setContentList] = useState<DetailedContentItem[]>(() => {
@@ -50,7 +65,7 @@ export const ContentPage: React.FC = () => {
         return []
       }
       const saved = localStorage.getItem('mbg_live_contents')
-      if (saved) return JSON.parse(saved)
+      if (saved) return sanitizeThumbnails(JSON.parse(saved))
     } catch {}
     return initialCombinedContents
   })
@@ -632,12 +647,20 @@ export const ContentPage: React.FC = () => {
                   </div>
 
                   <h3 className={`text-xs font-bold text-slate-900 leading-snug line-clamp-2 transition-colors ${
-                    item.platform === 'Instagram' ? 'group-hover:text-fuchsia-600' : 'group-hover:text-red-600'
+                    item.platform === 'Instagram'
+                      ? 'group-hover:text-fuchsia-600'
+                      : item.platform === 'Facebook'
+                      ? 'group-hover:text-blue-600'
+                      : 'group-hover:text-red-600'
                   }`}>
                     {item.title}
                   </h3>
                   <p className="text-[11px] text-slate-500 font-medium">
-                    {item.platform === 'Instagram' ? 'Akun:' : 'Channel:'}{' '}
+                    {item.platform === 'Instagram'
+                      ? 'Akun:'
+                      : item.platform === 'Facebook'
+                      ? 'Fanspage:'
+                      : 'Channel:'}{' '}
                     <span className="text-slate-800 font-semibold">{item.author}</span>
                   </p>
 
@@ -669,10 +692,16 @@ export const ContentPage: React.FC = () => {
                   className={`font-semibold flex items-center gap-1 ${
                     item.platform === 'Instagram'
                       ? 'text-fuchsia-600 hover:text-fuchsia-700'
+                      : item.platform === 'Facebook'
+                      ? 'text-blue-600 hover:text-blue-700'
                       : 'text-red-600 hover:text-red-700'
                   }`}
                 >
-                  {item.platform === 'Instagram' ? 'Buka di Instagram' : 'Buka di YouTube'}
+                  {item.platform === 'Instagram'
+                    ? 'Buka di Instagram'
+                    : item.platform === 'Facebook'
+                    ? 'Buka di Facebook'
+                    : 'Buka di YouTube'}
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
@@ -749,10 +778,16 @@ export const ContentPage: React.FC = () => {
                         className={`inline-flex items-center gap-1 font-semibold ${
                           item.platform === 'Instagram'
                             ? 'text-fuchsia-600 hover:text-fuchsia-800'
+                            : item.platform === 'Facebook'
+                            ? 'text-blue-600 hover:text-blue-800'
                             : 'text-red-600 hover:text-red-800'
                         }`}
                       >
-                        {item.platform === 'Instagram' ? 'Buka Post' : 'Buka Video'}
+                        {item.platform === 'Instagram'
+                          ? 'Buka Post IG'
+                          : item.platform === 'Facebook'
+                          ? 'Buka Post FB'
+                          : 'Buka Video'}
                         <ExternalLink className="w-3 h-3" />
                       </a>
                     </td>

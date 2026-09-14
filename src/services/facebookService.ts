@@ -50,7 +50,7 @@ export const sampleFacebookPosts: DetailedContentItem[] = [
     timeAgo: '12 Sep',
     sentiment: 'negatif',
     commentSentimentLabel: 'Sentimen Komentar: Negatif 86%',
-    thumbnailUrl: 'https://i.ytimg.com/vi/aL3N4447j9A/hqdefault.jpg',
+    thumbnailUrl: 'https://i.ytimg.com/vi/21g5WNyy1eY/hqdefault.jpg',
     url: 'https://www.facebook.com/tribunnews',
   },
   {
@@ -67,7 +67,7 @@ export const sampleFacebookPosts: DetailedContentItem[] = [
     timeAgo: '11 Sep',
     sentiment: 'netral',
     commentSentimentLabel: 'Sentimen Komentar: Netral 58%',
-    thumbnailUrl: 'https://i.ytimg.com/vi/u5h3Yq3n5aI/hqdefault.jpg',
+    thumbnailUrl: 'https://i.ytimg.com/vi/2gIobI9TvnA/hqdefault.jpg',
     url: 'https://www.facebook.com/CNNIndonesia',
   },
   {
@@ -84,7 +84,7 @@ export const sampleFacebookPosts: DetailedContentItem[] = [
     timeAgo: '10 Sep',
     sentiment: 'positif',
     commentSentimentLabel: 'Sentimen Komentar: Positif 68%',
-    thumbnailUrl: 'https://i.ytimg.com/vi/m0G8s7d8H_s/hqdefault.jpg',
+    thumbnailUrl: 'https://i.ytimg.com/vi/6lTjTgXMbaw/hqdefault.jpg',
     url: 'https://www.facebook.com/liputan6online',
   },
 ]
