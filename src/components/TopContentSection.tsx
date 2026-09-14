@@ -59,24 +59,24 @@ export const TopContentSection: React.FC<TopContentSectionProps> = ({
             {icon}
             <div>
               <div className="flex items-center gap-1.5">
-                <h4 className="text-sm font-bold text-slate-900 leading-tight">
+                <h4 className="text-base font-bold text-slate-900 leading-tight">
                   {platformName}
                 </h4>
                 {platformName === 'YouTube' ? (
-                  <span className="text-[9.5px] font-bold text-red-600 bg-red-50 border border-red-200/80 px-1.5 py-0.5 rounded">
+                  <span className="text-[10.5px] font-bold text-red-600 bg-red-50 border border-red-200/80 px-1.5 py-0.5 rounded">
                     Live API
                   </span>
                 ) : platformName === 'Instagram' ? (
-                  <span className="text-[9.5px] font-bold text-fuchsia-600 bg-fuchsia-50 border border-fuchsia-200 px-1.5 py-0.5 rounded">
+                  <span className="text-[10.5px] font-bold text-fuchsia-600 bg-fuchsia-50 border border-fuchsia-200 px-1.5 py-0.5 rounded">
                     Live Scraper
                   </span>
                 ) : (
-                  <span className="text-[9.5px] font-medium text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">
+                  <span className="text-[10.5px] font-semibold text-slate-500 bg-slate-100 px-1.5 py-0.5 rounded">
                     Demo
                   </span>
                 )}
               </div>
-              <span className="text-[10.5px] text-slate-400 font-medium">
+              <span className="text-xs text-slate-500 font-medium">
                 {platformName === 'YouTube'
                   ? 'Video Isu Kritis Terpantau'
                   : platformName === 'Instagram'
@@ -92,15 +92,15 @@ export const TopContentSection: React.FC<TopContentSectionProps> = ({
           {items.map((item) => (
             <div
               key={item.id}
-              className="flex items-start gap-2.5 group hover:bg-slate-50/80 p-1 rounded-lg transition-colors"
+              className="flex items-start gap-2.5 group hover:bg-slate-50/80 p-1.5 rounded-lg transition-colors"
             >
               {/* Rank */}
-              <span className="text-xs font-bold text-slate-700 w-3 pt-1 shrink-0 text-center">
+              <span className="text-sm font-bold text-slate-700 w-3.5 pt-0.5 shrink-0 text-center">
                 {item.rank}
               </span>
 
               {/* Thumbnail */}
-              <div className="relative w-14 h-9 rounded overflow-hidden bg-slate-200 shrink-0 border border-slate-200/80 shadow-xs">
+              <div className="relative w-16 h-10 rounded overflow-hidden bg-slate-200 shrink-0 border border-slate-200/80 shadow-xs">
                 <img
                   src={item.thumbnailUrl}
                   alt={item.title}
@@ -122,22 +122,22 @@ export const TopContentSection: React.FC<TopContentSectionProps> = ({
                     href={item.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="text-[11.5px] font-semibold text-slate-900 leading-snug line-clamp-2 hover:text-blue-600 hover:underline transition-colors block"
+                    className="text-xs font-semibold text-slate-900 leading-snug line-clamp-2 hover:text-blue-600 hover:underline transition-colors block"
                     title={`Buka di ${platformName}`}
                   >
                     {item.title}
                   </a>
                 ) : (
-                  <h5 className="text-[11.5px] font-semibold text-slate-900 leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">
+                  <h5 className="text-xs font-semibold text-slate-900 leading-snug line-clamp-2 group-hover:text-blue-600 transition-colors">
                     {item.title}
                   </h5>
                 )}
-                <div className="text-[10px] text-slate-400 mt-0.5 leading-tight flex flex-wrap items-center gap-1">
+                <div className="text-[11px] text-slate-500 mt-1 leading-tight flex flex-wrap items-center gap-1 font-medium">
                   <span>{item.views}</span>
                   <span>•</span>
                   <span>{item.comments}</span>
                 </div>
-                <div className="text-[9.5px] text-slate-400 mt-0.5">
+                <div className="text-[10.5px] text-slate-400 mt-0.5">
                   {item.timeAgo}
                 </div>
               </div>
@@ -157,18 +157,18 @@ export const TopContentSection: React.FC<TopContentSectionProps> = ({
   }
 
   return (
-    <div className="space-y-2.5">
+    <div className="space-y-3">
       {/* Title & View All */}
       <div className="flex items-center justify-between">
-        <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+        <h3 className="text-base font-bold text-slate-900 tracking-tight">
           Top 5 Konten per Platform
         </h3>
         <button
           type="button"
-          className="text-xs font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors group cursor-pointer"
+          className="text-sm font-semibold text-blue-600 hover:text-blue-700 flex items-center gap-1 transition-colors group cursor-pointer"
         >
           <span>Lihat Semua Konten</span>
-          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          <ArrowRight className="w-4 h-4 group-hover:translate-x-0.5 transition-transform" />
         </button>
       </div>
 

@@ -41,7 +41,7 @@ export const SentimentDonutChart: React.FC<SentimentDonutChartProps> = ({
     <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-xs flex flex-col justify-between h-full">
       {/* Title */}
       <div className="flex items-center justify-between mb-1">
-        <h3 className="text-xs font-bold text-slate-900 tracking-tight">Distribusi Sentimen</h3>
+        <h3 className="text-sm font-bold text-slate-900 tracking-tight">Distribusi Sentimen</h3>
       </div>
 
       {/* Donut and Legend */}
@@ -68,27 +68,27 @@ export const SentimentDonutChart: React.FC<SentimentDonutChartProps> = ({
 
           {/* Center text */}
           <div className="absolute inset-0 flex flex-col items-center justify-center text-center select-none pointer-events-none">
-            <span className="text-[15px] font-bold text-slate-900 tracking-tight leading-none">
+            <span className="text-xl font-extrabold text-slate-900 tracking-tight leading-none">
               {totalCount}
             </span>
-            <span className="text-[10px] text-slate-400 font-medium mt-1">
+            <span className="text-xs text-slate-500 font-semibold mt-1">
               Komentar
             </span>
           </div>
         </div>
 
         {/* Legend */}
-        <div className="space-y-2 text-xs min-w-[110px]">
+        <div className="space-y-2.5 text-xs min-w-[120px]">
           {data.map((item) => (
             <div key={item.name} className="flex items-center justify-between gap-3">
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-2">
                 <span
                   className="w-2.5 h-2.5 rounded-full shrink-0"
                   style={{ backgroundColor: item.color }}
                 ></span>
-                <span className="font-medium text-slate-700">{item.name}</span>
+                <span className="font-semibold text-slate-700 text-xs">{item.name}</span>
               </div>
-              <span className="font-bold text-slate-900">{item.percentage}%</span>
+              <span className="font-extrabold text-slate-900 text-sm">{item.percentage}%</span>
             </div>
           ))}
         </div>

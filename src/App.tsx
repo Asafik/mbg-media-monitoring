@@ -76,10 +76,10 @@ function App() {
           <div className="space-y-5">
             {/* Dashboard Title & Subtitle */}
             <div>
-              <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
+              <h2 className="text-2xl font-bold text-slate-900 tracking-tight leading-tight">
                 Dashboard
               </h2>
-              <p className="text-xs text-slate-500 mt-1">
+              <p className="text-sm text-slate-500 mt-1">
                 Ringkasan percakapan publik tentang Makan Bergizi Gratis (MBG) dari berbagai platform sosial media.
               </p>
             </div>
@@ -89,16 +89,16 @@ function App() {
 
             {/* Row 2: Charts Row (Tren Sentimen, Distribusi Sentimen, Jumlah Konten) */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-4">
-              <div className="lg:col-span-5 h-[230px]">
+              <div className="lg:col-span-5 min-h-[255px]">
                 <SentimentTrendChart data={data.sentimentTrends} />
               </div>
-              <div className="lg:col-span-4 h-[230px]">
+              <div className="lg:col-span-4 min-h-[255px]">
                 <SentimentDonutChart
                   data={data.sentimentDistributions}
                   totalCount={data.totalCommentsCount}
                 />
               </div>
-              <div className="lg:col-span-3 h-[230px]">
+              <div className="lg:col-span-3 min-h-[255px]">
                 <PlatformBarChart data={data.platformCounts} />
               </div>
             </div>

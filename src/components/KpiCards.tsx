@@ -65,18 +65,18 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ items }) => {
               <div className="flex items-center gap-3">
                 {getIcon(item.type)}
                 <div>
-                  <span className="text-[12px] font-medium text-slate-500 block leading-tight">
+                  <span className="text-sm font-semibold text-slate-600 block leading-tight">
                     {item.title}
                   </span>
                   <div className="flex items-baseline gap-2 mt-1">
-                    <span className="text-2xl font-bold text-slate-900 tracking-tight">
+                    <span className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
                       {item.value}
                     </span>
                     <span
-                      className={`inline-flex items-center gap-0.5 text-[11px] font-semibold px-1.5 py-0.5 rounded ${
+                      className={`inline-flex items-center gap-0.5 text-xs font-bold px-1.5 py-0.5 rounded ${
                         isUp
-                          ? 'bg-emerald-50 text-emerald-600'
-                          : 'bg-rose-50 text-rose-600'
+                          ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+                          : 'bg-rose-50 text-rose-700 border border-rose-200'
                       }`}
                     >
                       {isUp ? (
@@ -92,7 +92,7 @@ export const KpiCards: React.FC<KpiCardsProps> = ({ items }) => {
             </div>
 
             <div className="mt-3 pt-2 border-t border-slate-100">
-              <span className="text-[11px] text-slate-400 font-normal">
+              <span className="text-xs text-slate-500 font-medium">
                 {item.subtitle}
               </span>
             </div>

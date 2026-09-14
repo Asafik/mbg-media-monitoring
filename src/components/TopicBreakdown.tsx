@@ -27,7 +27,7 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({ topics }) => {
     <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-xs flex flex-col justify-between h-full">
       {/* Header with Filter Tabs */}
       <div className="flex items-center justify-between gap-2 mb-4 pb-1">
-        <h3 className="text-xs font-bold text-slate-900 tracking-tight">
+        <h3 className="text-sm font-bold text-slate-900 tracking-tight">
           Topik yang Sering Dibahas
         </h3>
 
@@ -40,10 +40,10 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({ topics }) => {
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveFilter(tab.id)}
-                className={`text-[11px] font-semibold px-2.5 py-1 rounded-md transition-all cursor-pointer ${
+                className={`text-xs font-semibold px-2.5 py-1 rounded-md transition-all cursor-pointer ${
                   isActive
                     ? 'bg-blue-600 text-white shadow-xs'
-                    : 'text-slate-500 hover:text-slate-800'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 {tab.label}
@@ -58,11 +58,11 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({ topics }) => {
         {filteredTopics.map((topic) => {
           const widthPercent = Math.max(12, (topic.count / maxVal) * 100)
           return (
-            <div key={topic.name} className="flex items-center gap-3 text-xs">
+            <div key={topic.name} className="flex items-center gap-3 text-sm">
               {/* Rank & Name */}
               <div className="w-36 sm:w-48 md:w-52 shrink-0 flex items-center gap-2">
-                <span className="font-bold text-slate-700 w-3">{topic.rank}</span>
-                <span className="font-medium text-slate-800 truncate" title={topic.name}>
+                <span className="font-bold text-slate-700 w-3.5 text-xs">{topic.rank}</span>
+                <span className="font-semibold text-slate-800 truncate text-xs sm:text-sm" title={topic.name}>
                   {topic.name}
                 </span>
               </div>
@@ -79,7 +79,7 @@ export const TopicBreakdown: React.FC<TopicBreakdownProps> = ({ topics }) => {
               </div>
 
               {/* Count Value */}
-              <span className="w-12 text-right font-bold text-slate-700 shrink-0 text-[11px]">
+              <span className="w-14 text-right font-bold text-slate-700 shrink-0 text-xs">
                 {topic.formattedCount}
               </span>
             </div>

@@ -48,13 +48,13 @@ export const PlatformBarChart: React.FC<PlatformBarChartProps> = ({ data }) => {
     <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-xs flex flex-col justify-between h-full">
       {/* Title */}
       <div className="mb-1">
-        <h3 className="text-xs font-bold text-slate-900 tracking-tight">
+        <h3 className="text-sm font-bold text-slate-900 tracking-tight">
           Jumlah Konten per Platform
         </h3>
       </div>
 
       {/* SVG Bar Chart */}
-      <div className="relative w-full h-[180px]">
+      <div className="relative w-full h-[185px]">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           className="w-full h-full overflow-visible select-none"
@@ -97,9 +97,9 @@ export const PlatformBarChart: React.FC<PlatformBarChartProps> = ({ data }) => {
                 x={paddingLeft - 7}
                 y={y + 3.5}
                 textAnchor="end"
-                fontSize="9.5"
-                fill="#94a3b8"
-                fontWeight="500"
+                fontSize="11"
+                fill="#64748b"
+                fontWeight="600"
               >
                 {tick}
               </text>
@@ -134,8 +134,8 @@ export const PlatformBarChart: React.FC<PlatformBarChartProps> = ({ data }) => {
                   x={cx}
                   y={y - 7}
                   textAnchor="middle"
-                  fontSize="12"
-                  fontWeight="700"
+                  fontSize="13"
+                  fontWeight="800"
                   fill={config.textColor}
                 >
                   {item.count}
@@ -198,9 +198,9 @@ export const PlatformBarChart: React.FC<PlatformBarChartProps> = ({ data }) => {
                   x={cx}
                   y={labelY}
                   textAnchor="middle"
-                  fontSize="9.5"
-                  fill="#334155"
-                  fontWeight="500"
+                  fontSize="11"
+                  fill="#1e293b"
+                  fontWeight="600"
                 >
                   {item.platform}
                 </text>

@@ -58,8 +58,8 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
     <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-xs flex flex-col justify-between h-full">
       {/* Header & Legend */}
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-bold text-slate-900 tracking-tight">Tren Sentimen</h3>
-        <div className="flex items-center gap-3 text-[11px] font-medium text-slate-600">
+        <h3 className="text-sm font-bold text-slate-900 tracking-tight">Tren Sentimen</h3>
+        <div className="flex items-center gap-3 text-xs font-semibold text-slate-600">
           <div className="flex items-center gap-1.5">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
             <span>Positif</span>
@@ -76,7 +76,7 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
       </div>
 
       {/* SVG Chart with preserveAspectRatio=none to fill card */}
-      <div className="relative w-full h-[180px]">
+      <div className="relative w-full h-[190px]">
         <svg
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="none"
@@ -108,9 +108,9 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
                   x={paddingLeft - 8}
                   y={y + 3.5}
                   textAnchor="end"
-                  fontSize="9.5"
-                  fill="#94a3b8"
-                  fontWeight="500"
+                  fontSize="11"
+                  fill="#64748b"
+                  fontWeight="600"
                 >
                   {tick}%
                 </text>
@@ -213,9 +213,9 @@ export const SentimentTrendChart: React.FC<SentimentTrendChartProps> = ({ data }
                   x={x}
                   y={height - 6}
                   textAnchor={idx === 0 ? 'start' : idx === data.length - 1 ? 'end' : 'middle'}
-                  fontSize="9.5"
-                  fill="#64748b"
-                  fontWeight="500"
+                  fontSize="11"
+                  fill="#475569"
+                  fontWeight="600"
                 >
                   {d.date}
                 </text>

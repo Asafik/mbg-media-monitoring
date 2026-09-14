@@ -43,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({
 
         {/* Periode Filter */}
         <div className="flex items-center gap-2">
-          <label htmlFor="period-select" className="text-xs font-semibold text-slate-700 hidden sm:inline">
+          <label htmlFor="period-select" className="text-sm font-semibold text-slate-700 hidden sm:inline">
             Periode
           </label>
           <div className="relative">
@@ -51,7 +51,7 @@ export const Header: React.FC<HeaderProps> = ({
               id="period-select"
               value={selectedPeriod}
               onChange={(e) => onPeriodChange(e.target.value)}
-              className="appearance-none bg-white border border-slate-200 text-xs font-medium text-slate-800 rounded-lg pl-3 pr-8 py-1.5 shadow-xs hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
+              className="appearance-none bg-white border border-slate-200 text-sm font-semibold text-slate-800 rounded-lg pl-3 pr-8 py-1.5 shadow-xs hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
             >
               {periods.map((p) => (
                 <option key={p} value={p}>
@@ -59,25 +59,25 @@ export const Header: React.FC<HeaderProps> = ({
                 </option>
               ))}
             </select>
-            <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
         </div>
       </div>
 
       {/* Right: Last Updated Status, Collector Health & Refresh */}
       <div className="flex items-center gap-3">
-        <div className="flex items-center gap-2 text-[11px] md:text-xs text-slate-500 bg-white/70 px-2.5 py-1 rounded-lg border border-slate-200/80 shadow-2xs">
+        <div className="flex items-center gap-2 text-xs md:text-sm text-slate-600 bg-white/70 px-3 py-1.5 rounded-lg border border-slate-200/80 shadow-2xs font-medium">
           <span className="relative flex h-2 w-2">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
             <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
           </span>
           <span className="hidden lg:inline">Diperbarui 10:45 WIB</span>
           <span className="hidden sm:inline text-slate-300">•</span>
-          <span className="hidden sm:inline text-emerald-700 font-medium bg-emerald-50 px-1.5 py-0.5 rounded text-[10px]">
+          <span className="hidden sm:inline text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded text-xs border border-emerald-200/60">
             4/4 Collector Sehat
           </span>
           <span className="hidden xl:inline text-slate-300">•</span>
-          <span className="hidden xl:inline text-slate-500 text-[11px]">
+          <span className="hidden xl:inline text-slate-500 text-xs">
             Top 5 × 4 Platform (20 Konten)
           </span>
           <span className="sm:hidden font-medium">10:45 WIB (Sehat)</span>
