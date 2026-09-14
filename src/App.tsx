@@ -15,6 +15,7 @@ import { ContentPage } from './pages/ContentPage'
 import { KeywordsPage } from './pages/KeywordsPage'
 import { ReportsPage } from './pages/ReportsPage'
 import { SettingsPage } from './pages/SettingsPage'
+import { SourcesPage } from './pages/SourcesPage'
 import { TopicsPage } from './pages/TopicsPage'
 
 function App() {
@@ -25,7 +26,7 @@ function App() {
   useEffect(() => {
     const syncWithHash = () => {
       const hash = window.location.hash.replace('#/', '').replace('#', '').toLowerCase()
-      if (['dashboard', 'konten', 'komentar', 'analisis', 'topik', 'keyword', 'laporan', 'pengaturan'].includes(hash)) {
+      if (['dashboard', 'konten', 'komentar', 'analisis', 'topik', 'keyword', 'sumber', 'laporan', 'pengaturan'].includes(hash)) {
         setActiveMenu(hash)
       } else if (!hash) {
         setActiveMenu('dashboard')
@@ -63,6 +64,8 @@ function App() {
         return <TopicsPage />
       case 'keyword':
         return <KeywordsPage />
+      case 'sumber':
+        return <SourcesPage />
       case 'laporan':
         return <ReportsPage />
       case 'pengaturan':

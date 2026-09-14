@@ -75,6 +75,38 @@ export interface CommentItem {
   sourceContentTitle: string
 }
 
+export interface TopicExtendedItem {
+  id: string
+  name: string
+  category: 'sistem' | 'otomatis'
+  mentionCount: string
+  growthPercentage: string
+  isTrendingUp: boolean
+  positiveRatio: number
+  negativeRatio: number
+  neutralRatio: number
+  keySampleQuotes: string[]
+  relatedContents: Array<{
+    id: string
+    title: string
+    platform: string
+    views: string
+  }>
+}
+
+export interface MonitoredSourceItem {
+  id: string
+  handle: string
+  name: string
+  platform: 'Instagram' | 'TikTok' | 'Facebook' | 'YouTube'
+  category: string
+  isActive: boolean
+  isDefault: boolean
+  postsCount: number
+  lastChecked: string
+  profileUrl: string
+}
+
 export interface TopicItem {
   rank: number
   name: string
