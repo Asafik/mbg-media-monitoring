@@ -17,7 +17,11 @@ import React, { useMemo, useState } from 'react'
 import { defaultMonitoredSources } from '../data/monitoredSourcesData'
 import type { MonitoredSourceItem } from '../types/dashboard'
 
-export const SourcesPage: React.FC = () => {
+export interface SourcesPageProps {
+  embedded?: boolean
+}
+
+export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) => {
   const [sourcesList, setSourcesList] = useState<MonitoredSourceItem[]>(() => {
     try {
       const saved = localStorage.getItem('mbg_monitored_sources')
@@ -181,42 +185,74 @@ export const SourcesPage: React.FC = () => {
   return (
     <div className="space-y-5 animate-section">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-fuchsia-50 text-fuchsia-600 flex items-center justify-center">
-              <FontAwesomeIcon icon={faInstagram} className="text-sm" />
+      {!embedded ? (
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+          <div>
+            <div className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-lg bg-fuchsia-50 text-fuchsia-600 flex items-center justify-center">
+                <FontAwesomeIcon icon={faInstagram} className="text-sm" />
+              </div>
+              <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
+                Target Akun Pantauan Instagram
+              </h2>
             </div>
-            <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
-              Target Akun Pantauan Instagram
-            </h2>
+            <p className="text-xs text-slate-500 mt-1">
+              Daftar target akun publik Instagram yang dipantau crawler MBG secara berkala.
+            </p>
           </div>
-          <p className="text-xs text-slate-500 mt-1">
-            Daftar target akun publik Instagram yang dipantau crawler MBG. YouTube memantau secara global via pencarian kata kunci, sedangkan TikTok & Facebook belum diaktifkan.
-          </p>
-        </div>
 
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={handleResetToDefault}
-            className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs"
-            title="Kembalikan ke Akun Instagram Default"
-          >
-            <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-            <span>Reset ke 8 Media Default</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={handleResetToDefault}
+              className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs"
+              title="Kembalikan ke Akun Instagram Default"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+              <span>Reset ke 8 Media Default</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setShowAddForm(!showAddForm)}
-            className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs"
-          >
-            <Plus className="w-4 h-4" />
-            <span>{showAddForm ? 'Tutup Form' : 'Tambah Akun Instagram'}</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs"
+            >
+              <Plus className="w-4 h-4" />
+              <span>{showAddForm ? 'Tutup Form' : 'Tambah Akun Instagram'}</span>
+            </button>
+          </div>
         </div>
-      </div>
+      ) : (
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
+          <div>
+            <h3 className="text-sm font-bold text-slate-900">
+              Daftar Target Akun Instagram Terpantau
+            </h3>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Kelola daftar akun media publik Instagram yang menjadi sasaran pantauan crawler sentimen MBG.
+            </p>
+          </div>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={handleResetToDefault}
+              className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs"
+              title="Kembalikan ke Akun Instagram Default"
+            >
+              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+              <span>Reset Default</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setShowAddForm(!showAddForm)}
+              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span>{showAddForm ? 'Tutup Form' : 'Tambah Akun'}</span>
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* Info Notice: Alasan Khusus Instagram */}
       <div className="p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-lg text-xs text-blue-900 flex items-start gap-2.5">

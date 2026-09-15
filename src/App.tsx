@@ -16,7 +16,6 @@ import { ContentPage } from './pages/ContentPage'
 import { KeywordsPage } from './pages/KeywordsPage'
 import { ReportsPage } from './pages/ReportsPage'
 import { SettingsPage } from './pages/SettingsPage'
-import { SourcesPage } from './pages/SourcesPage'
 import { TopicsPage } from './pages/TopicsPage'
 
 function App() {
@@ -27,8 +26,13 @@ function App() {
   useEffect(() => {
     const syncWithHash = () => {
       const hash = window.location.hash.replace('#/', '').replace('#', '').toLowerCase()
+      if (hash === 'sumber') {
+        setActiveMenu('pengaturan-akun')
+        window.location.hash = '/pengaturan-akun'
+        return
+      }
       if (
-        ['dashboard', 'konten', 'komentar', 'analisis', 'topik', 'keyword', 'sumber', 'laporan'].includes(hash) ||
+        ['dashboard', 'konten', 'komentar', 'analisis', 'topik', 'keyword', 'laporan'].includes(hash) ||
         hash.startsWith('pengaturan')
       ) {
         setActiveMenu(hash)
@@ -78,8 +82,6 @@ function App() {
         return <TopicsPage />
       case 'keyword':
         return <KeywordsPage />
-      case 'sumber':
-        return <SourcesPage />
       case 'laporan':
         return <ReportsPage />
       case 'dashboard':

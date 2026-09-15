@@ -10,7 +10,6 @@ import {
   PieChart,
   Settings,
   TrendingUp,
-  Users,
   X,
 } from 'lucide-react'
 import React, { useState } from 'react'
@@ -37,7 +36,6 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'analisis', label: 'Analisis', icon: TrendingUp },
     { id: 'topik', label: 'Topik', icon: PieChart },
     { id: 'keyword', label: 'Keyword', icon: KeyRound },
-    { id: 'sumber', label: 'Target Akun IG', icon: Users },
     { id: 'laporan', label: 'Laporan', icon: FileBarChart },
     { id: 'pengaturan', label: 'Pengaturan', icon: Settings },
   ]
