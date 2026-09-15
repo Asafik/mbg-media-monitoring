@@ -459,16 +459,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         </p>
       </div>
 
-      {/* Sub-section Indicator */}
-      <div className="flex items-center gap-2 pb-1 border-b border-slate-100">
-        <span className="text-xs font-semibold text-slate-400">Bagian:</span>
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md bg-blue-50 border border-blue-200 text-blue-800 text-xs font-bold">
-          {activeTab === 'koneksi' && 'Koneksi & API'}
-          {activeTab === 'akun' && 'Target Akun'}
-          {activeTab === 'keyword' && 'Kata Kunci'}
-          {activeTab === 'lainnya' && 'Lainnya (Sistem & Cache)'}
-        </span>
-      </div>
 
       {/* Global Alerts */}
       {savedSuccess && (
