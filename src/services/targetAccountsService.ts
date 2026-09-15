@@ -63,7 +63,12 @@ export async function getTargetAccounts(): Promise<{
         .order('created_at', { ascending: true })
 
       if (!error && data && data.length > 0) {
-        const mapped = data.map((d: DbTargetAccount) => mapDbToModel(d))
+        let mapped = data.map((d: DbTargetAccount) => mapDbToModel(d))
+        const hasTt = mapped.some((d) => d.platform === 'TikTok')
+        if (!hasTt) {
+          const ttDefaults = defaultMonitoredSources.filter((s) => s.platform === 'TikTok')
+          mapped = [...mapped, ...ttDefaults]
+        }
         localStorage.setItem('mbg_monitored_sources', JSON.stringify(mapped))
         return { data: mapped, fromDb: true }
       }
