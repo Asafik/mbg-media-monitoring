@@ -217,8 +217,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
     valid?: boolean
     text: string
   } | null>(null)
-  const [isKeyFromDb, setIsKeyFromDb] = useState(false)
-
   // Muat YouTube API Key dari Supabase saat halaman dibuka
   useEffect(() => {
     let isMounted = true
@@ -226,7 +224,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       const res = await getApiKey('youtube_api_key', DEFAULT_YOUTUBE_API_KEY)
       if (isMounted) {
         setYoutubeApiKey(res.key)
-        setIsKeyFromDb(res.fromDb)
       }
     }
     loadKey()
@@ -460,7 +457,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
     )
     setIsSavingKey(false)
     if (res.success) {
-      setIsKeyFromDb(true)
       setKeyValidationMessage({
         valid: true,
         text: 'API Key YouTube berhasil disimpan ke database Supabase dan langsung aktif!',
@@ -592,15 +588,11 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                 <div className="flex items-center gap-2">
                   <KeyRound className="w-4 h-4 text-blue-600" />
                   <h3 className="text-sm font-bold text-slate-900">
-                    Manajemen API Key & Kredensial Pengumpul Data (Tersimpan di Database)
+                    Manajemen API Key & Kredensial Pengumpul Data
                   </h3>
-                  <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                    {isKeyFromDb ? 'Tersimpan di DB Supabase' : 'Kredensial Aktif'}
-                  </span>
                 </div>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Ubah atau ganti API Key YouTube secara langsung ke database tanpa perlu menyentuh file environment atau restart aplikasi.
+                  Ubah atau ganti API Key YouTube secara langsung tanpa perlu menyentuh file environment atau restart aplikasi.
                 </p>
               </div>
             </div>
@@ -685,9 +677,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                     <span>YouTube Data API v3 Key:</span>
                     <span className="text-[10px] font-normal text-slate-400 font-mono">(Google Cloud Console)</span>
                   </label>
-                  <span className="text-[11px] text-slate-500">
-                    Penyimpanan: <strong className="text-emerald-700 font-medium">Supabase PostgreSQL (app_settings)</strong>
-                  </span>
                 </div>
 
                 <div className="relative flex items-center">
