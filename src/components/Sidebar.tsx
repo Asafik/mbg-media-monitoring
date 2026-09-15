@@ -8,10 +8,7 @@ import {
   LayoutDashboard,
   MessageSquare,
   PieChart,
-  Radio,
   Settings,
-  SlidersHorizontal,
-  Tag,
   TrendingUp,
   Users,
   X,
@@ -46,10 +43,10 @@ export const Sidebar: React.FC<SidebarProps> = ({
   ]
 
   const settingsSubItems = [
-    { id: 'pengaturan-koneksi', label: '1. Koneksi & API', icon: Radio },
-    { id: 'pengaturan-akun', label: '2. Target Akun', icon: Users },
-    { id: 'pengaturan-keyword', label: '3. Keyword', icon: Tag },
-    { id: 'pengaturan-lainnya', label: '4. Lainnya (Sistem)', icon: SlidersHorizontal },
+    { id: 'pengaturan-koneksi', label: 'Koneksi & API' },
+    { id: 'pengaturan-akun', label: 'Target Akun' },
+    { id: 'pengaturan-keyword', label: 'Kata Kunci' },
+    { id: 'pengaturan-lainnya', label: 'Lainnya (Sistem & Cache)' },
   ]
 
   const handleItemClick = (id: string) => {
@@ -139,9 +136,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
                   {/* Sub-menu items under Pengaturan */}
                   {isSettingsOpen && (
-                    <div className="pl-3.5 pr-1 py-1 space-y-1 border-l border-slate-700/60 ml-5 animate-in fade-in duration-150">
+                    <div className="pl-3 pr-1 py-1 space-y-1 border-l border-slate-700/60 ml-5 animate-in fade-in duration-150">
                       {settingsSubItems.map((sub) => {
-                        const SubIcon = sub.icon
                         const isSubActive =
                           activeMenu === sub.id ||
                           (activeMenu === 'pengaturan' && sub.id === 'pengaturan-koneksi')
@@ -150,13 +146,17 @@ export const Sidebar: React.FC<SidebarProps> = ({
                             key={sub.id}
                             type="button"
                             onClick={() => handleItemClick(sub.id)}
-                            className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-left cursor-pointer ${
+                            className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs font-medium transition-all text-left cursor-pointer ${
                               isSubActive
                                 ? 'bg-[#2563eb] text-white font-semibold shadow-xs'
                                 : 'text-slate-400 hover:text-slate-100 hover:bg-[#202d42]'
                             }`}
                           >
-                            <SubIcon className={`w-3.5 h-3.5 shrink-0 ${isSubActive ? 'text-white' : 'text-slate-400'}`} />
+                            <ChevronRight
+                              className={`w-3.5 h-3.5 shrink-0 transition-transform ${
+                                isSubActive ? 'text-white translate-x-0.5' : 'text-slate-500'
+                              }`}
+                            />
                             <span className="truncate">{sub.label}</span>
                           </button>
                         )

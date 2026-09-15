@@ -64,12 +64,7 @@ function App() {
       else if (activeMenu === 'pengaturan-keyword') currentTab = 'keyword'
       else if (activeMenu === 'pengaturan-lainnya') currentTab = 'lainnya'
 
-      return (
-        <SettingsPage
-          initialTab={currentTab}
-          onTabChange={(newTab) => handleSelectMenu(`pengaturan-${newTab}`)}
-        />
-      )
+      return <SettingsPage initialTab={currentTab} />
     }
 
     switch (activeMenu) {
