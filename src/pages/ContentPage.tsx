@@ -6,7 +6,7 @@ import {
   faScaleBalanced,
   faArrowsRotate,
 } from '@fortawesome/free-solid-svg-icons'
-import { faYoutube, faInstagram, faFacebook } from '@fortawesome/free-brands-svg-icons'
+import { faYoutube, faInstagram, faFacebook, faTiktok } from '@fortawesome/free-brands-svg-icons'
 import {
   CheckCircle2,
   Database,
@@ -34,6 +34,10 @@ import {
   fetchTop5FacebookPosts,
   sampleFacebookPosts,
 } from '../services/facebookService'
+import {
+  fetchTop5TikTokPosts,
+  sampleTikTokPosts,
+} from '../services/tiktokService'
 import type { DetailedContentItem } from '../types/dashboard'
 
 /**
@@ -93,6 +97,7 @@ const initialCombinedContents: DetailedContentItem[] = sanitizeThumbnails([
   ...allDetailedContents.filter((item) => item.platform === 'YouTube'),
   ...sampleInstagramPosts,
   ...sampleFacebookPosts,
+  ...sampleTikTokPosts,
 ])
 
 export const ContentPage: React.FC = () => {
@@ -122,6 +127,7 @@ export const ContentPage: React.FC = () => {
   const [isFetchingYouTube, setIsFetchingYouTube] = useState(false)
   const [isFetchingInstagram, setIsFetchingInstagram] = useState(false)
   const [isFetchingFacebook, setIsFetchingFacebook] = useState(false)
+  const [isFetchingTikTok, setIsFetchingTikTok] = useState(false)
   const [deduplicateCrossPlatform, setDeduplicateCrossPlatform] = useState<boolean>(true)
   const [syncSuccessMessage, setSyncSuccessMessage] = useState<string | null>(null)
 
@@ -223,6 +229,35 @@ export const ContentPage: React.FC = () => {
     }
   }
 
+  const handleFetchTikTokLive = async () => {
+    setIsFetchingTikTok(true)
+    try {
+      const realTikTokPosts = await fetchTop5TikTokPosts()
+      if (realTikTokPosts.length > 0) {
+        setContentList((prev) => {
+          const nonTt = prev.filter((p) => p.platform !== 'TikTok')
+          const updated = [...nonTt, ...realTikTokPosts]
+          try {
+            localStorage.removeItem('mbg_cleared_empty')
+            localStorage.setItem('mbg_live_contents', JSON.stringify(updated))
+            window.dispatchEvent(new CustomEvent('mbg-live-contents-updated', { detail: updated }))
+          } catch {}
+          return updated
+        })
+        setSyncSuccessMessage(
+          `Berhasil menarik ${realTikTokPosts.length} video TikTok (Tanpa Login) seputar isu MBG!`
+        )
+        setTimeout(() => setSyncSuccessMessage(null), 6000)
+      }
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err)
+      setSyncSuccessMessage(`Error saat menarik TikTok: ${msg}`)
+      setTimeout(() => setSyncSuccessMessage(null), 5000)
+    } finally {
+      setIsFetchingTikTok(false)
+    }
+  }
+
   const filteredContents = useMemo(() => {
     let result = contentList.filter((item) => {
       const matchSearch =
@@ -310,6 +345,14 @@ export const ContentPage: React.FC = () => {
         <span className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 border border-blue-200/80 px-2 py-0.5 rounded text-[11px] font-bold">
           <FontAwesomeIcon icon={faFacebook} className="text-blue-600 text-xs" />
           Facebook
+        </span>
+      )
+    }
+    if (platform === 'TikTok') {
+      return (
+        <span className="inline-flex items-center gap-1.5 bg-slate-900 text-white border border-slate-800 px-2 py-0.5 rounded text-[11px] font-bold shadow-2xs">
+          <FontAwesomeIcon icon={faTiktok} className="text-white text-xs" />
+          TikTok
         </span>
       )
     }
@@ -500,7 +543,7 @@ export const ContentPage: React.FC = () => {
           <button
             type="button"
             onClick={handleFetchFacebookLive}
-            disabled={isFetchingYouTube || isFetchingInstagram || isFetchingFacebook}
+            disabled={isFetchingYouTube || isFetchingInstagram || isFetchingFacebook || isFetchingTikTok}
             className="flex items-center gap-1.5 bg-[#1877f2] hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs active:scale-95 disabled:opacity-50"
             title="Tarik 5 postingan Facebook fanspage berita media tanpa API key atau login"
           >
@@ -511,6 +554,24 @@ export const ContentPage: React.FC = () => {
             )}
             <span>
               {isFetchingFacebook ? 'Menarik...' : 'Tarik Facebook (Tanpa API)'}
+            </span>
+          </button>
+
+          {/* Button Tarik 5 Video TikTok (Public Scraper - Tanpa API & Tanpa DB) */}
+          <button
+            type="button"
+            onClick={handleFetchTikTokLive}
+            disabled={isFetchingYouTube || isFetchingInstagram || isFetchingFacebook || isFetchingTikTok}
+            className="flex items-center gap-1.5 bg-slate-950 hover:bg-black text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs active:scale-95 disabled:opacity-50"
+            title="Tarik 5 video TikTok publik seputar isu MBG tanpa login dan tanpa database"
+          >
+            {isFetchingTikTok ? (
+              <FontAwesomeIcon icon={faArrowsRotate} className="text-xs animate-spin" />
+            ) : (
+              <FontAwesomeIcon icon={faTiktok} className="text-sm" />
+            )}
+            <span>
+              {isFetchingTikTok ? 'Menarik...' : 'Tarik TikTok (Tanpa Login)'}
             </span>
           </button>
 
@@ -551,7 +612,7 @@ export const ContentPage: React.FC = () => {
         <div className="flex items-center gap-2">
           <Info className="w-4 h-4 text-blue-600 shrink-0" />
           <span>
-            <strong>Status Integrasi:</strong> <strong className="text-red-600">YouTube Data API v3 (Live)</strong>, <strong className="text-fuchsia-600">Instagram Scraper (Tanpa Login)</strong>, dan <strong className="text-blue-600">Facebook Scraper (Tanpa Login)</strong> aktif. Platform TikTok tetap dalam mode demo.
+            <strong>Status Integrasi:</strong> <strong className="text-red-600">YouTube API (Live)</strong>, <strong className="text-fuchsia-600">Instagram Scraper (Tanpa Login)</strong>, <strong className="text-blue-600">Facebook Crawler (Tanpa Login)</strong>, dan <strong className="text-slate-900">TikTok Scraper (Tanpa Login)</strong> aktif.
           </span>
         </div>
         <div className="flex items-center gap-1.5 shrink-0">
@@ -563,6 +624,9 @@ export const ContentPage: React.FC = () => {
           </span>
           <span className="text-[10.5px] bg-blue-50 text-blue-700 border border-blue-200 font-bold px-2 py-0.5 rounded">
             FB Scraper
+          </span>
+          <span className="text-[10.5px] bg-slate-900 text-white border border-slate-800 font-bold px-2 py-0.5 rounded">
+            TikTok Scraper
           </span>
         </div>
       </div>
@@ -604,8 +668,8 @@ export const ContentPage: React.FC = () => {
         </div>
         <div className="bg-white rounded-lg p-4 border border-slate-200 shadow-xs">
           <span className="text-xs font-semibold text-slate-500">Status Platform Aktif</span>
-          <div className="text-2xl font-bold text-emerald-600 mt-1">2 Aktif</div>
-          <span className="text-[11px] text-slate-400">YouTube + Instagram Live</span>
+          <div className="text-2xl font-bold text-emerald-600 mt-1">4 Aktif</div>
+          <span className="text-[11px] text-slate-400">YouTube, IG, FB & TikTok</span>
         </div>
       </div>
 
@@ -626,7 +690,7 @@ export const ContentPage: React.FC = () => {
         {/* Platform Tabs */}
         <div className="flex items-center gap-1.5">
           <span className="text-xs text-slate-500 font-medium mr-1">Platform:</span>
-          {(['Semua', 'YouTube', 'Instagram', 'Facebook'] as const).map((p) => (
+          {(['Semua', 'YouTube', 'Instagram', 'Facebook', 'TikTok'] as const).map((p) => (
             <button
               key={p}
               type="button"
@@ -639,6 +703,8 @@ export const ContentPage: React.FC = () => {
                     ? 'bg-gradient-to-r from-amber-500 via-rose-500 to-purple-600 text-white shadow-xs'
                     : p === 'Facebook'
                     ? 'bg-blue-600 text-white shadow-xs'
+                    : p === 'TikTok'
+                    ? 'bg-slate-950 text-white shadow-xs'
                     : 'bg-slate-800 text-white shadow-xs'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
               }`}
@@ -646,6 +712,7 @@ export const ContentPage: React.FC = () => {
               {p === 'YouTube' && <FontAwesomeIcon icon={faYoutube} className="mr-1 text-xs" />}
               {p === 'Instagram' && <FontAwesomeIcon icon={faInstagram} className="mr-1 text-xs" />}
               {p === 'Facebook' && <FontAwesomeIcon icon={faFacebook} className="mr-1 text-xs" />}
+              {p === 'TikTok' && <FontAwesomeIcon icon={faTiktok} className="mr-1 text-xs" />}
               {p}
             </button>
           ))}
