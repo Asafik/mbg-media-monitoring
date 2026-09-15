@@ -80,6 +80,10 @@ const sanitizeThumbnails = (items: DetailedContentItem[]): DetailedContentItem[]
   return items.map((item) => {
     if (item.id === 'fb-kompas-1') return sampleFacebookPosts[0]
     if (item.id === 'fb-detik-2') return sampleFacebookPosts[1]
+    const ttMatch = sampleTikTokPosts.find((tt) => tt.id === item.id)
+    if (ttMatch) {
+      return { ...item, thumbnailUrl: ttMatch.thumbnailUrl, title: ttMatch.title }
+    }
     if (item.thumbnailUrl.includes('aL3N4447j9A')) {
       return { ...item, thumbnailUrl: 'https://i.ytimg.com/vi/21g5WNyy1eY/hqdefault.jpg' }
     }
@@ -819,12 +823,14 @@ export const ContentPage: React.FC = () => {
                       ? 'group-hover:text-fuchsia-600'
                       : item.platform === 'Facebook'
                       ? 'group-hover:text-blue-600'
+                      : item.platform === 'TikTok'
+                      ? 'group-hover:text-slate-950'
                       : 'group-hover:text-red-600'
                   }`}>
                     {item.title}
                   </h3>
                   <p className="text-[11px] text-slate-500 font-medium">
-                    {item.platform === 'Instagram'
+                    {item.platform === 'Instagram' || item.platform === 'TikTok'
                       ? 'Akun:'
                       : item.platform === 'Facebook'
                       ? 'Fanspage:'
@@ -862,14 +868,12 @@ export const ContentPage: React.FC = () => {
                       ? 'text-fuchsia-600 hover:text-fuchsia-700'
                       : item.platform === 'Facebook'
                       ? 'text-blue-600 hover:text-blue-700'
+                      : item.platform === 'TikTok'
+                      ? 'text-slate-900 hover:text-black'
                       : 'text-red-600 hover:text-red-700'
                   }`}
                 >
-                  {item.platform === 'Instagram'
-                    ? 'Buka di Instagram'
-                    : item.platform === 'Facebook'
-                    ? 'Buka di Facebook'
-                    : 'Buka di YouTube'}
+                  Buka di {item.platform}
                   <ExternalLink className="w-3 h-3" />
                 </a>
               </div>
@@ -923,7 +927,11 @@ export const ContentPage: React.FC = () => {
                             {item.title}
                           </p>
                           <p className="text-[10.5px] text-slate-400 mt-0.5">
-                            {item.platform === 'Instagram' ? 'Akun:' : 'Channel:'}{' '}
+                            {item.platform === 'Instagram' || item.platform === 'TikTok'
+                              ? 'Akun:'
+                              : item.platform === 'Facebook'
+                              ? 'Fanspage:'
+                              : 'Channel:'}{' '}
                             <span className="text-slate-700 font-medium">{item.author}</span> • {item.timeAgo}
                           </p>
                         </div>
@@ -948,6 +956,8 @@ export const ContentPage: React.FC = () => {
                             ? 'text-fuchsia-600 hover:text-fuchsia-800'
                             : item.platform === 'Facebook'
                             ? 'text-blue-600 hover:text-blue-800'
+                            : item.platform === 'TikTok'
+                            ? 'text-slate-900 hover:text-black'
                             : 'text-red-600 hover:text-red-800'
                         }`}
                       >
@@ -955,6 +965,8 @@ export const ContentPage: React.FC = () => {
                           ? 'Buka Post IG'
                           : item.platform === 'Facebook'
                           ? 'Buka Post FB'
+                          : item.platform === 'TikTok'
+                          ? 'Buka di TikTok'
                           : 'Buka Video'}
                         <ExternalLink className="w-3 h-3" />
                       </a>

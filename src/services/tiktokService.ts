@@ -15,7 +15,7 @@ export const sampleTikTokPosts: DetailedContentItem[] = [
     timeAgo: '14 Sep',
     sentiment: 'positif',
     commentSentimentLabel: 'Sentimen Komentar: Positif 84%',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?w=480&auto=format&fit=crop&q=80',
+    thumbnailUrl: 'https://i.ytimg.com/vi/oNZA9jTMQvI/hqdefault.jpg',
     url: 'https://www.tiktok.com/@kuliner.sekolah_id',
   },
   {
@@ -32,7 +32,7 @@ export const sampleTikTokPosts: DetailedContentItem[] = [
     timeAgo: '13 Sep',
     sentiment: 'negatif',
     commentSentimentLabel: 'Sentimen Komentar: Kritis 81%',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?w=480&auto=format&fit=crop&q=80',
+    thumbnailUrl: 'https://i.ytimg.com/vi/rh2aQ4UlPWc/hqdefault.jpg',
     url: 'https://www.tiktok.com/@suara.pelajar_official',
   },
   {
@@ -49,14 +49,14 @@ export const sampleTikTokPosts: DetailedContentItem[] = [
     timeAgo: '13 Sep',
     sentiment: 'positif',
     commentSentimentLabel: 'Sentimen Komentar: Positif 89%',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=480&auto=format&fit=crop&q=80',
+    thumbnailUrl: 'https://i.ytimg.com/vi/hnVgW1nMJWY/hqdefault.jpg',
     url: 'https://www.tiktok.com/@dapur.gizi.nusantara',
   },
   {
     id: 'tt-mbg-4',
     platform: 'TikTok',
     rank: 4,
-    title: 'Perdebatan Netizen: Lebih Baik Susu Pasteurisasi Sapi Lokal atau Susu Ikan untuk Menu MBG?',
+    title: 'Perdebatan Netizen: Evaluasi Higienitas & Pengawasan Menu MBG Agar Kualitas Terjaga',
     author: '@opini.publik_id',
     views: '760K tayangan',
     numericViews: 760000,
@@ -66,7 +66,7 @@ export const sampleTikTokPosts: DetailedContentItem[] = [
     timeAgo: '12 Sep',
     sentiment: 'netral',
     commentSentimentLabel: 'Sentimen Komentar: Pro-Kontra 55%',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1577308856961-8e9ec50d0c67?w=480&auto=format&fit=crop&q=80',
+    thumbnailUrl: 'https://i.ytimg.com/vi/jCno2fVj_CA/hqdefault.jpg',
     url: 'https://www.tiktok.com/@opini.publik_id',
   },
   {
@@ -83,7 +83,7 @@ export const sampleTikTokPosts: DetailedContentItem[] = [
     timeAgo: '11 Sep',
     sentiment: 'positif',
     commentSentimentLabel: 'Sentimen Komentar: Positif 93%',
-    thumbnailUrl: 'https://images.unsplash.com/photo-1556910103-1c02745aae4d?w=480&auto=format&fit=crop&q=80',
+    thumbnailUrl: 'https://i.ytimg.com/vi/cMae0UkPiAw/hqdefault.jpg',
     url: 'https://www.tiktok.com/@guru.penggerak_desa',
   },
 ]
