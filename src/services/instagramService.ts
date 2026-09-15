@@ -52,27 +52,5 @@ export async function fetchTop5InstagramPosts(): Promise<DetailedContentItem[]> 
  */
 export async function fetchInstagramComments(): Promise<CommentItem[]> {
   await new Promise((resolve) => setTimeout(resolve, 600))
-
-  // Upsert to Supabase
-  try {
-    for (const c of sampleInstagramComments) {
-      await supabase.from('comments').upsert({
-        id: c.id,
-        author: c.author,
-        anonymized_author: c.anonymizedAuthor,
-        platform: c.platform,
-        text: c.text,
-        sentiment: c.sentiment,
-        confidence_score: c.confidenceScore,
-        is_sarcasm_or_needs_review: c.isSarcasmOrNeedsReview,
-        time_ago: c.timeAgo,
-        likes: c.likes,
-        source_content_title: c.sourceContentTitle,
-      })
-    }
-  } catch {
-    // Non-blocking
-  }
-
   return sampleInstagramComments
 }

@@ -141,85 +141,9 @@ async function seedTikTokContents() {
     )
   }
 
-  const comments = [
-    {
-      id: 'tt-cmt-1',
-      author: '@guru_penggerak_desa',
-      anonymized_author: '@gur***',
-      platform: 'TikTok',
-      text: 'Menu lengkap dan higienis sangat membantu anak-anak di pelosok lebih semangat belajar.',
-      sentiment: 'positif',
-      confidence_score: 0.93,
-      is_sarcasm_or_needs_review: false,
-      time_ago: '14 Sep',
-      likes: 2150,
-      source_content_title: 'BGN Buka Suara Soal Pengawasan Menu dan Dapur Pelayanan MBG Seluruh Indonesia',
-    },
-    {
-      id: 'tt-cmt-2',
-      author: '@warga_kritis_62',
-      anonymized_author: '@war***',
-      platform: 'TikTok',
-      text: 'Audit ketat anggarannya dan pastikan vendor lokal yang profesional yang terlibat.',
-      sentiment: 'negatif',
-      confidence_score: 0.87,
-      is_sarcasm_or_needs_review: false,
-      time_ago: '11 Sep',
-      likes: 1420,
-      source_content_title: 'Sorotan Publik: Anggaran 71T Program Makan Bergizi Gratis & Evaluasi Distribusi Lapangan',
-    },
-    {
-      id: 'tt-cmt-3',
-      author: '@ibu_rumahtangga_33',
-      anonymized_author: '@ibu***',
-      platform: 'TikTok',
-      text: 'Wadah ompreng stainless memang lebih ramah lingkungan dan makanan tetap bersih.',
-      sentiment: 'netral',
-      confidence_score: 0.81,
-      is_sarcasm_or_needs_review: false,
-      time_ago: '12 Sep',
-      likes: 680,
-      source_content_title: 'Klarifikasi Pihak SPPG Terkait Standar Ompreng Stainless & Pengawasan Higienitas Makanan MBG',
-    },
-  ]
-
-  for (const c of comments) {
-    await client.query(
-      `
-      INSERT INTO public.comments (
-        id, author, anonymized_author, platform, text, sentiment, confidence_score, is_sarcasm_or_needs_review, time_ago, likes, source_content_title
-      ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-      ON CONFLICT (id) DO UPDATE SET
-        text = EXCLUDED.text,
-        sentiment = EXCLUDED.sentiment,
-        confidence_score = EXCLUDED.confidence_score,
-        is_sarcasm_or_needs_review = EXCLUDED.is_sarcasm_or_needs_review,
-        time_ago = EXCLUDED.time_ago,
-        likes = EXCLUDED.likes;
-    `,
-      [
-        c.id,
-        c.author,
-        c.anonymized_author,
-        c.platform,
-        c.text,
-        c.sentiment,
-        c.confidence_score,
-        c.is_sarcasm_or_needs_review,
-        c.time_ago,
-        c.likes,
-        c.source_content_title,
-      ]
-    )
-  }
-
   const countRes = await client.query('SELECT platform, count(*) FROM public.contents GROUP BY platform;')
   console.log('Contents by platform in Supabase DB:')
   console.table(countRes.rows)
-
-  const commentCountRes = await client.query('SELECT platform, count(*) FROM public.comments GROUP BY platform;')
-  console.log('Comments by platform in Supabase DB:')
-  console.table(commentCountRes.rows)
 
   await client.end()
 }

@@ -347,27 +347,6 @@ export async function fetchYouTubeComments(
     }
   }
 
-  // Upsert to Supabase comments table
-  try {
-    for (const c of allComments) {
-      await supabase.from('comments').upsert({
-        id: c.id,
-        author: c.author,
-        anonymized_author: c.anonymizedAuthor,
-        platform: c.platform,
-        text: c.text,
-        sentiment: c.sentiment,
-        confidence_score: c.confidenceScore,
-        is_sarcasm_or_needs_review: c.isSarcasmOrNeedsReview,
-        time_ago: c.timeAgo,
-        likes: c.likes,
-        source_content_title: c.sourceContentTitle,
-      })
-    }
-  } catch {
-    // Non-blocking
-  }
-
   return allComments
 }
 

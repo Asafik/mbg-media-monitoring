@@ -55,40 +55,9 @@ export async function fetchTop5TikTokPosts(): Promise<DetailedContentItem[]> {
 }
 
 /**
- * Fetch top TikTok comments seputar MBG langsung dari database Supabase
+ * Fetch top TikTok comments seputar MBG (tidak menyentuh database)
  */
 export async function fetchTikTokComments(): Promise<CommentItem[]> {
   await new Promise((resolve) => setTimeout(resolve, 500))
-
-  if (isSupabaseConfigured) {
-    try {
-      const { data, error } = await supabase
-        .from('comments')
-        .select('*')
-        .eq('platform', 'TikTok')
-        .order('likes', { ascending: false })
-
-      if (!error && data && data.length > 0) {
-        const mapped: CommentItem[] = data.map((c) => ({
-          id: c.id,
-          author: c.author,
-          anonymizedAuthor: c.anonymized_author || c.author,
-          platform: c.platform,
-          text: c.text,
-          sentiment: c.sentiment,
-          confidenceScore: c.confidence_score,
-          isSarcasmOrNeedsReview: c.is_sarcasm_or_needs_review,
-          timeAgo: c.time_ago,
-          likes: c.likes,
-          sourceContentTitle: c.source_content_title,
-        }))
-
-        return mapped
-      }
-    } catch (e) {
-      console.warn('Gagal memuat komentar TikTok dari Supabase:', e)
-    }
-  }
-
   return sampleTikTokComments
 }
