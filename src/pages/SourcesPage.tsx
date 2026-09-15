@@ -14,6 +14,7 @@ import {
   X,
 } from 'lucide-react'
 import React, { useMemo, useState } from 'react'
+import { createPortal } from 'react-dom'
 import { defaultMonitoredSources } from '../data/monitoredSourcesData'
 import type { MonitoredSourceItem } from '../types/dashboard'
 
@@ -680,251 +681,200 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
       </div>
 
       {/* MODAL: TAMBAH & EDIT TARGET AKUN (IG / FB) */}
-      {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
-          <div className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
-            {/* Modal Header */}
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
-              <div>
-                <h3 className="text-sm font-bold text-slate-900">
-                  {editingItem ? 'Edit Target Pantauan' : 'Tambah Target Akun Media'}
-                </h3>
-                <p className="text-xs text-slate-500 mt-0.5">
-                  {editingItem
-                    ? `Perbarui data pantauan untuk ${editingItem.handle}`
-                    : 'Pilih platform (Instagram / Facebook) dan lengkapi rincian akun.'}
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={closeModal}
-                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            {/* Modal Form */}
-            <form onSubmit={handleModalSubmit} className="p-5 space-y-4">
-              {/* Step 1: Pilih Platform Terlebih Dahulu */}
-              <div>
-                <label className="text-[11px] font-bold text-slate-700 block mb-1.5 uppercase tracking-wider">
-                  1. Pilih Platform Media Sosial:
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setFormPlatform('Instagram')}
-                    className={`p-3 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-3 ${
-                      formPlatform === 'Instagram'
-                        ? 'bg-fuchsia-50 border-fuchsia-300 ring-2 ring-fuchsia-400/30'
-                        : 'bg-white border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div
-                      className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                        formPlatform === 'Instagram'
-                          ? 'bg-fuchsia-600 text-white shadow-xs'
-                          : 'bg-slate-100 text-slate-600'
-                      }`}
-                    >
-                      <FontAwesomeIcon icon={faInstagram} className="text-base" />
-                    </div>
-                    <div className="min-w-0">
-                      <span
-                        className={`text-xs font-bold block ${
-                          formPlatform === 'Instagram' ? 'text-fuchsia-900' : 'text-slate-800'
-                        }`}
-                      >
-                        Instagram
-                      </span>
-                      <span className="text-[10px] text-slate-500 block truncate">
-                        Crawler Open Graph Publik
-                      </span>
-                    </div>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setFormPlatform('Facebook')}
-                    className={`p-3 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-3 ${
-                      formPlatform === 'Facebook'
-                        ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-400/30'
-                        : 'bg-white border-slate-200 hover:bg-slate-50'
-                    }`}
-                  >
-                    <div
-                      className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
-                        formPlatform === 'Facebook'
-                          ? 'bg-blue-600 text-white shadow-xs'
-                          : 'bg-slate-100 text-slate-600'
-                      }`}
-                    >
-                      <FontAwesomeIcon icon={faFacebook} className="text-base" />
-                    </div>
-                    <div className="min-w-0">
-                      <span
-                        className={`text-xs font-bold block ${
-                          formPlatform === 'Facebook' ? 'text-blue-900' : 'text-slate-800'
-                        }`}
-                      >
-                        Facebook
-                      </span>
-                      <span className="text-[10px] text-slate-500 block truncate">
-                        Crawler Fanspage Publik
-                      </span>
-                    </div>
-                  </button>
-                </div>
-              </div>
-
-              {/* Step 2: Form Fields Sesuai Platform yang Dipilih */}
-              <div className="space-y-3 pt-2 border-t border-slate-100">
-                <label className="text-[11px] font-bold text-slate-700 block uppercase tracking-wider">
-                  2. Informasi Akun {formPlatform}:
-                </label>
-
-                {/* Handle / Username Input */}
+      {isModalOpen &&
+        createPortal(
+          <div
+            className="fixed inset-0 bg-slate-900/25 z-[9999] flex items-center justify-center p-4 transition-opacity duration-200"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) closeModal()
+            }}
+          >
+            <div
+              className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Modal Header */}
+              <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
                 <div>
-                  <label className="text-[11px] font-semibold text-slate-700 block mb-1">
-                    {formPlatform === 'Instagram'
-                      ? 'Username / Handle Instagram *'
-                      : 'Nama Fanspage / ID Halaman Facebook *'}
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder={
-                      formPlatform === 'Instagram'
-                        ? 'Contoh: @kompascom atau narasinewsroom'
-                        : 'Contoh: Kompas.com atau CNNIndonesia'
-                    }
-                    value={formHandle}
-                    onChange={(e) => setFormHandle(e.target.value)}
-                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    {formPlatform === 'Instagram'
-                      ? 'Otomatis diformat dengan awalan @.'
-                      : 'Masukkan nama resmi fanspage publik Facebook.'}
+                  <h3 className="text-sm font-bold text-slate-900">
+                    {editingItem ? 'Edit Target Pantauan' : 'Tambah Target Akun Media'}
+                  </h3>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    {editingItem
+                      ? `Perbarui rincian target pantauan untuk ${editingItem.handle}`
+                      : 'Pilih platform dan lengkapi rincian akun sasaran crawler.'}
                   </p>
                 </div>
-
-                {/* Nama Tampilan Media */}
-                <div>
-                  <label className="text-[11px] font-semibold text-slate-700 block mb-1">
-                    Nama Tampilan / Nama Media *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    placeholder={
-                      formPlatform === 'Instagram'
-                        ? 'Contoh: Kompas.com'
-                        : 'Contoh: Kompas.com Fanspage'
-                    }
-                    value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
-                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </div>
-
-                {/* Kategori Media */}
-                <div>
-                  <label className="text-[11px] font-semibold text-slate-700 block mb-1">
-                    Kategori / Label Sasaran
-                  </label>
-                  <input
-                    type="text"
-                    placeholder={
-                      formPlatform === 'Instagram'
-                        ? 'Contoh: Media Berita Nasional / Jurnalisme Investigasi'
-                        : 'Contoh: Portal Berita Digital / Fanspage Resmi Pemerintah'
-                    }
-                    value={formCategory}
-                    onChange={(e) => setFormCategory(e.target.value)}
-                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </div>
-
-                {/* URL Profil / Halaman */}
-                <div>
-                  <label className="text-[11px] font-semibold text-slate-700 block mb-1">
-                    {formPlatform === 'Instagram'
-                      ? 'URL Profil Instagram (Opsional)'
-                      : 'URL Halaman Facebook (Opsional)'}
-                  </label>
-                  <input
-                    type="url"
-                    placeholder={
-                      formPlatform === 'Instagram'
-                        ? 'https://www.instagram.com/kompascom/'
-                        : 'https://www.facebook.com/kompascom'
-                    }
-                    value={formProfileUrl}
-                    onChange={(e) => setFormProfileUrl(e.target.value)}
-                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    Dibiarkan kosong akan di-generate otomatis dari handle.
-                  </p>
-                </div>
-
-                {/* Status Pantauan */}
-                <div className="pt-2">
-                  <label className="text-[11px] font-semibold text-slate-700 block mb-1.5">
-                    Status Pemantauan Crawler
-                  </label>
-                  <div className="flex items-center gap-2.5">
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={formIsActive}
-                      onClick={() => setFormIsActive(!formIsActive)}
-                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${
-                        formIsActive ? 'bg-emerald-600' : 'bg-slate-300'
-                      }`}
-                    >
-                      <span
-                        aria-hidden="true"
-                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                          formIsActive ? 'translate-x-5' : 'translate-x-0'
-                        }`}
-                      />
-                    </button>
-                    <span
-                      onClick={() => setFormIsActive(!formIsActive)}
-                      className={`text-xs font-semibold cursor-pointer select-none ${
-                        formIsActive ? 'text-emerald-700' : 'text-slate-500'
-                      }`}
-                    >
-                      {formIsActive ? 'Aktif (Dipantau oleh crawler)' : 'Tidak Aktif (Dijeda sementara)'}
-                    </span>
-                  </div>
-                </div>
-              </div>
-
-              {/* Modal Footer */}
-              <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
                 <button
                   type="button"
                   onClick={closeModal}
-                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                  className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer"
                 >
-                  Batal
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5" />
-                  <span>{editingItem ? 'Simpan Perubahan' : 'Simpan Target Akun'}</span>
+                  <X className="w-4 h-4" />
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
+
+              {/* Modal Form */}
+              <form onSubmit={handleModalSubmit} className="p-5 space-y-4">
+                {/* 1. Pilih Platform via Select Dropdown */}
+                <div>
+                  <label className="text-xs font-semibold text-slate-700 block mb-1.5">
+                    Platform Media Sosial *
+                  </label>
+                  <select
+                    value={formPlatform}
+                    onChange={(e) => setFormPlatform(e.target.value as 'Instagram' | 'Facebook')}
+                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
+                  >
+                    <option value="Instagram">Instagram (Crawler Open Graph Publik)</option>
+                    <option value="Facebook">Facebook (Crawler Fanspage Publik)</option>
+                  </select>
+                </div>
+
+                {/* 2. Form Fields Sesuai Platform yang Dipilih */}
+                <div className="space-y-3 pt-2 border-t border-slate-100">
+                  {/* Handle / Username Input */}
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-700 block mb-1">
+                      {formPlatform === 'Instagram'
+                        ? 'Username / Handle Instagram *'
+                        : 'Nama Fanspage / ID Halaman Facebook *'}
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder={
+                        formPlatform === 'Instagram'
+                          ? 'Contoh: @kompascom atau narasinewsroom'
+                          : 'Contoh: Kompas.com atau CNNIndonesia'
+                      }
+                      value={formHandle}
+                      onChange={(e) => setFormHandle(e.target.value)}
+                      className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      {formPlatform === 'Instagram'
+                        ? 'Otomatis diformat dengan awalan @.'
+                        : 'Masukkan nama resmi fanspage publik Facebook.'}
+                    </p>
+                  </div>
+
+                  {/* Nama Tampilan Media */}
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-700 block mb-1">
+                      Nama Tampilan / Nama Media *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder={
+                        formPlatform === 'Instagram'
+                          ? 'Contoh: Kompas.com'
+                          : 'Contoh: Kompas.com Fanspage'
+                      }
+                      value={formName}
+                      onChange={(e) => setFormName(e.target.value)}
+                      className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                  </div>
+
+                  {/* Kategori Media */}
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-700 block mb-1">
+                      Kategori / Label Sasaran
+                    </label>
+                    <input
+                      type="text"
+                      placeholder={
+                        formPlatform === 'Instagram'
+                          ? 'Contoh: Media Berita Nasional / Jurnalisme Investigasi'
+                          : 'Contoh: Portal Berita Digital / Fanspage Resmi Pemerintah'
+                      }
+                      value={formCategory}
+                      onChange={(e) => setFormCategory(e.target.value)}
+                      className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                  </div>
+
+                  {/* URL Profil / Halaman */}
+                  <div>
+                    <label className="text-[11px] font-semibold text-slate-700 block mb-1">
+                      {formPlatform === 'Instagram'
+                        ? 'URL Profil Instagram (Opsional)'
+                        : 'URL Halaman Facebook (Opsional)'}
+                    </label>
+                    <input
+                      type="url"
+                      placeholder={
+                        formPlatform === 'Instagram'
+                          ? 'https://www.instagram.com/kompascom/'
+                          : 'https://www.facebook.com/kompascom'
+                      }
+                      value={formProfileUrl}
+                      onChange={(e) => setFormProfileUrl(e.target.value)}
+                      className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Dibiarkan kosong akan di-generate otomatis dari handle.
+                    </p>
+                  </div>
+
+                  {/* Status Pantauan */}
+                  <div className="pt-2">
+                    <label className="text-[11px] font-semibold text-slate-700 block mb-1.5">
+                      Status Pemantauan Crawler
+                    </label>
+                    <div className="flex items-center gap-2.5">
+                      <button
+                        type="button"
+                        role="switch"
+                        aria-checked={formIsActive}
+                        onClick={() => setFormIsActive(!formIsActive)}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${
+                          formIsActive ? 'bg-emerald-600' : 'bg-slate-300'
+                        }`}
+                      >
+                        <span
+                          aria-hidden="true"
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                            formIsActive ? 'translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                      <span
+                        onClick={() => setFormIsActive(!formIsActive)}
+                        className={`text-xs font-semibold cursor-pointer select-none ${
+                          formIsActive ? 'text-emerald-700' : 'text-slate-500'
+                        }`}
+                      >
+                        {formIsActive ? 'Aktif (Dipantau oleh crawler)' : 'Tidak Aktif (Dijeda sementara)'}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Modal Footer */}
+                <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+                  <button
+                    type="button"
+                    onClick={closeModal}
+                    className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                  >
+                    Batal
+                  </button>
+                  <button
+                    type="submit"
+                    className="px-4 py-2 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>{editingItem ? 'Simpan Perubahan' : 'Simpan Target Akun'}</span>
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>,
+          document.body
+        )}
     </div>
   )
 }

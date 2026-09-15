@@ -729,17 +729,19 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         </div>
       )}
 
-      {/* Save Button at Bottom */}
-      <div className="flex justify-end pt-2">
-        <button
-          type="button"
-          onClick={handleSave}
-          className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-5 py-2.5 rounded-lg flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
-        >
-          <Save className="w-4 h-4" />
-          <span>Simpan Seluruh Pengaturan</span>
-        </button>
-      </div>
+      {/* Save Button at Bottom: Hanya ditampilkan di tab yang membutuhkan penyimpanan form (Keyword & Lainnya) */}
+      {(activeTab === 'keyword' || activeTab === 'lainnya') && (
+        <div className="flex justify-end pt-2">
+          <button
+            type="button"
+            onClick={handleSave}
+            className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-5 py-2.5 rounded-lg flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
+          >
+            <Save className="w-4 h-4" />
+            <span>Simpan Seluruh Pengaturan</span>
+          </button>
+        </div>
+      )}
     </div>
   )
 }
