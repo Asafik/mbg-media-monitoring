@@ -7,23 +7,12 @@ import {
 import { faYoutube, faInstagram, faFacebook } from '@fortawesome/free-brands-svg-icons'
 import { CheckCircle2, Info, MessageSquare, Search, X } from 'lucide-react'
 import React, { useMemo, useState } from 'react'
-import { mockCommentsList } from '../data/extendedMockData'
 import { fetchYouTubeComments } from '../services/youtubeService'
-import {
-  fetchInstagramComments,
-  sampleInstagramComments,
-} from '../services/instagramService'
-import {
-  fetchFacebookComments,
-  sampleFacebookComments,
-} from '../services/facebookService'
+import { fetchInstagramComments } from '../services/instagramService'
+import { fetchFacebookComments } from '../services/facebookService'
 import type { CommentItem } from '../types/dashboard'
 
-const initialCombinedComments: CommentItem[] = [
-  ...mockCommentsList,
-  ...sampleInstagramComments,
-  ...sampleFacebookComments,
-]
+const initialCombinedComments: CommentItem[] = []
 
 export const CommentsPage: React.FC = () => {
   const [commentsList, setCommentsList] = useState<CommentItem[]>(() => {

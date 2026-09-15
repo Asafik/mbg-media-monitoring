@@ -21,23 +21,13 @@ import {
   X,
 } from 'lucide-react'
 import React, { useMemo, useState } from 'react'
-import { allDetailedContents } from '../data/extendedMockData'
 import {
   fetchTop5YouTubeVideos,
   type YouTubeIssueTopic,
 } from '../services/youtubeService'
-import {
-  fetchTop5InstagramPosts,
-  sampleInstagramPosts,
-} from '../services/instagramService'
-import {
-  fetchTop5FacebookPosts,
-  sampleFacebookPosts,
-} from '../services/facebookService'
-import {
-  fetchTop5TikTokPosts,
-  sampleTikTokPosts,
-} from '../services/tiktokService'
+import { fetchTop5InstagramPosts } from '../services/instagramService'
+import { fetchTop5FacebookPosts } from '../services/facebookService'
+import { fetchTop5TikTokPosts } from '../services/tiktokService'
 import type { DetailedContentItem } from '../types/dashboard'
 
 /**
@@ -78,31 +68,20 @@ const areContentsDuplicate = (a: DetailedContentItem, b: DetailedContentItem): b
 // Initial content gabungan YouTube + Instagram + Facebook (Tanpa API/Login)
 const sanitizeThumbnails = (items: DetailedContentItem[]): DetailedContentItem[] => {
   return items.map((item) => {
-    if (item.id === 'fb-kompas-1') return sampleFacebookPosts[0]
-    if (item.id === 'fb-detik-2') return sampleFacebookPosts[1]
-    const ttMatch = sampleTikTokPosts.find((tt) => tt.id === item.id)
-    if (ttMatch) {
-      return { ...item, thumbnailUrl: ttMatch.thumbnailUrl, title: ttMatch.title }
-    }
-    if (item.thumbnailUrl.includes('aL3N4447j9A')) {
+    if (item.thumbnailUrl && item.thumbnailUrl.includes('aL3N4447j9A')) {
       return { ...item, thumbnailUrl: 'https://i.ytimg.com/vi/21g5WNyy1eY/hqdefault.jpg' }
     }
-    if (item.thumbnailUrl.includes('u5h3Yq3n5aI')) {
+    if (item.thumbnailUrl && item.thumbnailUrl.includes('u5h3Yq3n5aI')) {
       return { ...item, thumbnailUrl: 'https://i.ytimg.com/vi/2gIobI9TvnA/hqdefault.jpg' }
     }
-    if (item.thumbnailUrl.includes('m0G8s7d8H_s')) {
+    if (item.thumbnailUrl && item.thumbnailUrl.includes('m0G8s7d8H_s')) {
       return { ...item, thumbnailUrl: 'https://i.ytimg.com/vi/6lTjTgXMbaw/hqdefault.jpg' }
     }
     return item
   })
 }
 
-const initialCombinedContents: DetailedContentItem[] = sanitizeThumbnails([
-  ...allDetailedContents.filter((item) => item.platform === 'YouTube'),
-  ...sampleInstagramPosts,
-  ...sampleFacebookPosts,
-  ...sampleTikTokPosts,
-])
+const initialCombinedContents: DetailedContentItem[] = []
 
 export const ContentPage: React.FC = () => {
   const [contentList, setContentList] = useState<DetailedContentItem[]>(() => {
