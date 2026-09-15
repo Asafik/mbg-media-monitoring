@@ -1,4 +1,6 @@
 import {
+  ChevronDown,
+  ChevronRight,
   FileBarChart,
   FileText,
   Info,
@@ -6,12 +8,15 @@ import {
   LayoutDashboard,
   MessageSquare,
   PieChart,
+  Radio,
   Settings,
+  SlidersHorizontal,
+  Tag,
   TrendingUp,
   Users,
   X,
 } from 'lucide-react'
-import React from 'react'
+import React, { useState } from 'react'
 
 interface SidebarProps {
   activeMenu: string
@@ -26,6 +31,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isMobileOpen = false,
   onCloseMobile,
 }) => {
+  const [isSettingsOpen, setIsSettingsOpen] = useState(true)
+
   const menuItems = [
     { id: 'dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { id: 'konten', label: 'Konten', icon: FileText },
@@ -36,6 +43,13 @@ export const Sidebar: React.FC<SidebarProps> = ({
     { id: 'sumber', label: 'Target Akun IG', icon: Users },
     { id: 'laporan', label: 'Laporan', icon: FileBarChart },
     { id: 'pengaturan', label: 'Pengaturan', icon: Settings },
+  ]
+
+  const settingsSubItems = [
+    { id: 'pengaturan-koneksi', label: '1. Koneksi & API', icon: Radio },
+    { id: 'pengaturan-akun', label: '2. Target Akun', icon: Users },
+    { id: 'pengaturan-keyword', label: '3. Keyword', icon: Tag },
+    { id: 'pengaturan-lainnya', label: '4. Lainnya (Sistem)', icon: SlidersHorizontal },
   ]
 
   const handleItemClick = (id: string) => {
@@ -89,7 +103,70 @@ export const Sidebar: React.FC<SidebarProps> = ({
         <nav className="p-3 space-y-1 mt-2">
           {menuItems.map((item) => {
             const Icon = item.icon
-            const isActive = activeMenu === item.id
+            const isPengaturan = item.id === 'pengaturan'
+            const isPengaturanActive = activeMenu.startsWith('pengaturan')
+            const isActive = isPengaturan ? isPengaturanActive : activeMenu === item.id
+
+            if (isPengaturan) {
+              return (
+                <div key={item.id} className="space-y-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsSettingsOpen((prev) => !prev)
+                      if (!activeMenu.startsWith('pengaturan')) {
+                        handleItemClick('pengaturan-koneksi')
+                      }
+                    }}
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-lg text-sm font-medium transition-colors text-left cursor-pointer ${
+                      isActive && !isSettingsOpen
+                        ? 'bg-[#2563eb] text-white shadow-sm'
+                        : isActive
+                        ? 'bg-[#202d42] text-white font-semibold'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-[#202d42]'
+                    }`}
+                  >
+                    <div className="flex items-center gap-3">
+                      <Icon className={`w-4 h-4 ${isActive ? 'text-blue-400' : 'text-slate-400'}`} />
+                      <span>{item.label}</span>
+                    </div>
+                    {isSettingsOpen ? (
+                      <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                    ) : (
+                      <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
+                    )}
+                  </button>
+
+                  {/* Sub-menu items under Pengaturan */}
+                  {isSettingsOpen && (
+                    <div className="pl-3.5 pr-1 py-1 space-y-1 border-l border-slate-700/60 ml-5 animate-in fade-in duration-150">
+                      {settingsSubItems.map((sub) => {
+                        const SubIcon = sub.icon
+                        const isSubActive =
+                          activeMenu === sub.id ||
+                          (activeMenu === 'pengaturan' && sub.id === 'pengaturan-koneksi')
+                        return (
+                          <button
+                            key={sub.id}
+                            type="button"
+                            onClick={() => handleItemClick(sub.id)}
+                            className={`w-full flex items-center gap-2.5 px-3 py-1.5 rounded-md text-xs font-medium transition-all text-left cursor-pointer ${
+                              isSubActive
+                                ? 'bg-[#2563eb] text-white font-semibold shadow-xs'
+                                : 'text-slate-400 hover:text-slate-100 hover:bg-[#202d42]'
+                            }`}
+                          >
+                            <SubIcon className={`w-3.5 h-3.5 shrink-0 ${isSubActive ? 'text-white' : 'text-slate-400'}`} />
+                            <span className="truncate">{sub.label}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  )}
+                </div>
+              )
+            }
+
             return (
               <button
                 key={item.id}

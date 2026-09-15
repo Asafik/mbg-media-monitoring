@@ -27,7 +27,10 @@ function App() {
   useEffect(() => {
     const syncWithHash = () => {
       const hash = window.location.hash.replace('#/', '').replace('#', '').toLowerCase()
-      if (['dashboard', 'konten', 'komentar', 'analisis', 'topik', 'keyword', 'sumber', 'laporan', 'pengaturan'].includes(hash)) {
+      if (
+        ['dashboard', 'konten', 'komentar', 'analisis', 'topik', 'keyword', 'sumber', 'laporan'].includes(hash) ||
+        hash.startsWith('pengaturan')
+      ) {
         setActiveMenu(hash)
       } else if (!hash) {
         setActiveMenu('dashboard')
@@ -55,6 +58,20 @@ function App() {
   } = useDashboardData()
 
   const renderActivePage = () => {
+    if (activeMenu.startsWith('pengaturan')) {
+      let currentTab: 'koneksi' | 'akun' | 'keyword' | 'lainnya' = 'koneksi'
+      if (activeMenu === 'pengaturan-akun') currentTab = 'akun'
+      else if (activeMenu === 'pengaturan-keyword') currentTab = 'keyword'
+      else if (activeMenu === 'pengaturan-lainnya') currentTab = 'lainnya'
+
+      return (
+        <SettingsPage
+          initialTab={currentTab}
+          onTabChange={(newTab) => handleSelectMenu(`pengaturan-${newTab}`)}
+        />
+      )
+    }
+
     switch (activeMenu) {
       case 'konten':
         return <ContentPage />
@@ -70,8 +87,6 @@ function App() {
         return <SourcesPage />
       case 'laporan':
         return <ReportsPage />
-      case 'pengaturan':
-        return <SettingsPage />
       case 'dashboard':
       default:
         // Show skeleton shimmer while initial data loads

@@ -52,7 +52,15 @@ const DEFAULT_ISSUE_KEYWORDS = [
   'susu sapi',
 ]
 
-export const SettingsPage: React.FC = () => {
+export interface SettingsPageProps {
+  initialTab?: SettingsTab
+  onTabChange?: (tab: SettingsTab) => void
+}
+
+export const SettingsPage: React.FC<SettingsPageProps> = ({
+  initialTab = 'koneksi',
+  onTabChange,
+}) => {
   // Keyword Utama (Wajib ada pada konten)
   const [primaryKeywords, setPrimaryKeywords] = useState<string[]>(() => {
     try {
@@ -103,7 +111,18 @@ export const SettingsPage: React.FC = () => {
   const [cacheClearMessage, setCacheClearMessage] = useState<string | null>(null)
   const [isTestingApi, setIsTestingApi] = useState(false)
   const [apiTestMessage, setApiTestMessage] = useState<string | null>(null)
-  const [activeTab, setActiveTab] = useState<SettingsTab>('koneksi')
+  const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab)
+
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab)
+    }
+  }, [initialTab])
+
+  const handleSelectTab = (tab: SettingsTab) => {
+    setActiveTab(tab)
+    onTabChange?.(tab)
+  }
 
   const getStorageStats = () => {
     try {
@@ -362,7 +381,7 @@ export const SettingsPage: React.FC = () => {
             <button
               key={tab.id}
               type="button"
-              onClick={() => setActiveTab(tab.id)}
+              onClick={() => handleSelectTab(tab.id)}
               className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
                 isActive
                   ? 'bg-blue-600 text-white shadow-xs'
