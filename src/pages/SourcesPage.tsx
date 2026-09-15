@@ -1,5 +1,5 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faInstagram, faFacebook } from '@fortawesome/free-brands-svg-icons'
+import { faInstagram, faFacebook, faTiktok } from '@fortawesome/free-brands-svg-icons'
 import {
   CheckCircle2,
   ExternalLink,
@@ -54,7 +54,7 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
   })
 
   // Filter States
-  const [selectedPlatform, setSelectedPlatform] = useState<'semua' | 'Instagram' | 'Facebook'>('semua')
+  const [selectedPlatform, setSelectedPlatform] = useState<'semua' | 'Instagram' | 'Facebook' | 'TikTok'>('semua')
   const [selectedStatus, setSelectedStatus] = useState<'semua' | 'aktif' | 'nonaktif'>('semua')
   const [searchTerm, setSearchTerm] = useState('')
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
@@ -64,7 +64,7 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
   const [editingItem, setEditingItem] = useState<MonitoredSourceItem | null>(null)
 
   // Modal Form Inputs
-  const [formPlatform, setFormPlatform] = useState<'Instagram' | 'Facebook'>('Instagram')
+  const [formPlatform, setFormPlatform] = useState<'Instagram' | 'Facebook' | 'TikTok'>('Instagram')
   const [formHandle, setFormHandle] = useState('')
   const [formName, setFormName] = useState('')
   const [formCategory, setFormCategory] = useState('')
@@ -120,7 +120,8 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
     const inactiveCount = sourcesList.filter((s) => !s.isActive).length
     const igCount = sourcesList.filter((s) => s.platform === 'Instagram').length
     const fbCount = sourcesList.filter((s) => s.platform === 'Facebook').length
-    return { total, activeCount, inactiveCount, igCount, fbCount }
+    const ttCount = sourcesList.filter((s) => s.platform === 'TikTok').length
+    return { total, activeCount, inactiveCount, igCount, fbCount, ttCount }
   }, [sourcesList])
 
   // Filter Logic
@@ -146,7 +147,7 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
   }, [sourcesList, selectedPlatform, selectedStatus, searchTerm])
 
   // Modal Handlers
-  const openAddModal = (defaultPlat: 'Instagram' | 'Facebook' = 'Instagram') => {
+  const openAddModal = (defaultPlat: 'Instagram' | 'Facebook' | 'TikTok' = 'Instagram') => {
     setEditingItem(null)
     setFormPlatform(defaultPlat)
     setFormHandle('')
@@ -159,7 +160,7 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
 
   const openEditModal = (item: MonitoredSourceItem) => {
     setEditingItem(item)
-    setFormPlatform((item.platform as 'Instagram' | 'Facebook') || 'Instagram')
+    setFormPlatform((item.platform as 'Instagram' | 'Facebook' | 'TikTok') || 'Instagram')
     setFormHandle(item.handle)
     setFormName(item.name)
     setFormCategory(item.category)
@@ -178,7 +179,7 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
     let cleanHandle = formHandle.trim()
     if (!cleanHandle) return
 
-    if (formPlatform === 'Instagram') {
+    if (formPlatform === 'Instagram' || formPlatform === 'TikTok') {
       if (!cleanHandle.startsWith('@')) {
         cleanHandle = `@${cleanHandle}`
       }
@@ -191,6 +192,8 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
     const defaultUrl =
       formPlatform === 'Instagram'
         ? `https://www.instagram.com/${rawId}/`
+        : formPlatform === 'TikTok'
+        ? `https://www.tiktok.com/@${rawId}`
         : `https://www.facebook.com/${encodeURIComponent(cleanHandle)}`
 
     const finalUrl = formProfileUrl.trim() || defaultUrl
@@ -265,7 +268,7 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
   const handleResetToDefault = async () => {
     if (
       window.confirm(
-        'Kembalikan seluruh daftar akun ke 12 media berita default di database (8 Instagram + 4 Facebook)?'
+        'Kembalikan seluruh daftar akun ke 17 akun default di database (8 Instagram + 4 Facebook + 5 TikTok)?'
       )
     ) {
       setIsSyncingDb(true)
@@ -288,11 +291,11 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
                 <Radio className="text-sm" />
               </div>
               <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
-                Target Akun Pantauan Media (Instagram & Facebook)
+                Target Akun Pantauan Media (Instagram, Facebook & TikTok)
               </h2>
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              Kelola daftar akun publik Instagram dan Facebook Fanspage yang dipantau crawler MBG secara terpadu.
+              Kelola daftar akun publik Instagram, Facebook Fanspage, dan kreator TikTok yang dipantau crawler MBG secara terpadu.
             </p>
           </div>
 
@@ -304,7 +307,7 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
               title="Kembalikan ke Akun Default"
             >
               <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-              <span>Reset Default (12 Media)</span>
+              <span>Reset Default (17 Akun)</span>
             </button>
 
             <button
@@ -322,7 +325,7 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
           <div>
             <div className="flex items-center gap-2">
               <h3 className="text-sm font-bold text-slate-900">
-                Daftar Target Akun & Fanspage Terpadu (Instagram & Facebook)
+                Daftar Target Akun Terpadu (Instagram, Facebook & TikTok)
               </h3>
               <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
                 <span className={`w-1.5 h-1.5 rounded-full ${isSyncingDb ? 'bg-amber-500 animate-spin' : isDbConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
@@ -330,7 +333,7 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
               </span>
             </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Kelola seluruh akun Instagram dan Fanspage Facebook sasaran crawler langsung terhubung dengan database Supabase.
+              Kelola akun Instagram, Fanspage Facebook, dan kreator TikTok yang dipantau crawler MBG.
             </p>
           </div>
           <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -342,7 +345,7 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
               title="Kembalikan ke Akun Default"
             >
               <RotateCcw className={`w-3.5 h-3.5 text-slate-500 ${isSyncingDb ? 'animate-spin' : ''}`} />
-              <span>Reset Default</span>
+              <span>Reset (17 Akun)</span>
             </button>
             <button
               type="button"
@@ -356,11 +359,11 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
         </div>
       )}
 
-      {/* Info Notice: Penjelasan Crawler Publik IG & FB */}
+      {/* Info Notice */}
       <div className="p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-lg text-xs text-blue-900 flex items-start gap-2.5">
         <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
         <div className="leading-relaxed">
-          <span className="font-bold">Manajemen Akun Terpadu:</span> Daftar ini memadukan akun publik <strong>Instagram</strong> dan fanspage <strong>Facebook</strong>. Crawler menyerap postingan publik seputar program MBG secara otomatis tanpa memerlukan kredensial login.
+          <span className="font-bold">Manajemen Akun Terpadu:</span> Daftar ini memadukan akun publik <strong>Instagram</strong>, fanspage <strong>Facebook</strong>, dan kreator <strong>TikTok</strong>. Crawler menyerap postingan publik seputar program MBG secara otomatis tanpa memerlukan kredensial login.
         </div>
       </div>
 
@@ -429,6 +432,20 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
         </div>
       </div>
 
+      {/* KPI TikTok Mini Card */}
+      <div className="grid grid-cols-1 gap-3">
+        <div className="bg-slate-950 rounded-lg p-3.5 border border-slate-800 shadow-xs flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center shrink-0">
+            <FontAwesomeIcon icon={faTiktok} className="text-white text-base" />
+          </div>
+          <div className="flex-1">
+            <span className="text-[11px] font-medium text-slate-400 block">Platform TikTok (Public Scraper — Tanpa Login)</span>
+            <span className="text-base font-bold text-white">{stats.ttCount} Kreator Terpantau</span>
+          </div>
+          <span className="text-[10px] font-bold text-emerald-400 bg-emerald-400/10 border border-emerald-400/20 px-2 py-0.5 rounded">Bebas Kuota</span>
+        </div>
+      </div>
+
       {/* Filter & Search Bar */}
       <div className="bg-white rounded-lg p-3.5 border border-slate-200 shadow-xs space-y-3">
         <div className="flex flex-wrap items-center justify-between gap-3">
@@ -443,7 +460,7 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              Semua Platform ({stats.total})
+              Semua ({stats.total})
             </button>
             <button
               type="button"
@@ -468,6 +485,18 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
             >
               <FontAwesomeIcon icon={faFacebook} className="text-xs" />
               <span>Facebook ({stats.fbCount})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedPlatform('TikTok')}
+              className={`text-xs px-3 py-1.5 rounded-md font-semibold transition-colors cursor-pointer shrink-0 flex items-center gap-1.5 ${
+                selectedPlatform === 'TikTok'
+                  ? 'bg-slate-950 text-white shadow-xs'
+                  : 'text-slate-700 hover:text-slate-900 hover:bg-slate-100'
+              }`}
+            >
+              <FontAwesomeIcon icon={faTiktok} className="text-xs" />
+              <span>TikTok ({stats.ttCount})</span>
             </button>
           </div>
 
@@ -545,6 +574,7 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
             <tbody className="divide-y divide-slate-100 text-slate-700">
               {filteredSources.map((item) => {
                 const isIg = item.platform === 'Instagram'
+                const isTt = item.platform === 'TikTok'
                 return (
                   <tr
                     key={item.id}
@@ -563,12 +593,16 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
                               ? item.isActive
                                 ? 'bg-fuchsia-50 border-fuchsia-200 text-fuchsia-700'
                                 : 'bg-slate-100/60 border-slate-200 text-slate-400'
+                              : isTt
+                              ? item.isActive
+                                ? 'bg-slate-900 border-slate-700 text-white'
+                                : 'bg-slate-100/60 border-slate-200 text-slate-400'
                               : item.isActive
                               ? 'bg-blue-50 border-blue-200 text-blue-700'
                               : 'bg-slate-100/60 border-slate-200 text-slate-400'
                           }`}
                         >
-                          <FontAwesomeIcon icon={isIg ? faInstagram : faFacebook} className="text-sm" />
+                          <FontAwesomeIcon icon={isIg ? faInstagram : isTt ? faTiktok : faFacebook} className="text-sm" />
                         </div>
                         <div>
                           <div className="font-bold text-slate-900 flex items-center gap-1.5">
@@ -590,12 +624,16 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
                     <td className="py-3 px-3">
                       <span
                         className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold border ${
-                          isIg
+                          item.platform === 'Instagram'
                             ? 'bg-fuchsia-50 text-fuchsia-800 border-fuchsia-200'
+                            : item.platform === 'TikTok'
+                            ? 'bg-slate-900 text-white border-slate-700'
                             : 'bg-blue-50 text-blue-800 border-blue-200'
                         }`}
                       >
-                        <FontAwesomeIcon icon={isIg ? faInstagram : faFacebook} className="text-[10px]" />
+                        {item.platform === 'Instagram' && <FontAwesomeIcon icon={faInstagram} className="text-[10px]" />}
+                        {item.platform === 'Facebook' && <FontAwesomeIcon icon={faFacebook} className="text-[10px]" />}
+                        {item.platform === 'TikTok' && <FontAwesomeIcon icon={faTiktok} className="text-[10px]" />}
                         {item.platform}
                       </span>
                     </td>
@@ -679,13 +717,15 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
                         </button>
 
                         {item.profileUrl && item.profileUrl !== '#' && (
-                          <a
+                        <a
                             href={item.profileUrl}
                             target="_blank"
                             rel="noopener noreferrer"
                             className={`p-1.5 text-slate-400 rounded transition-colors ${
-                              isIg
+                              item.platform === 'Instagram'
                                 ? 'hover:text-fuchsia-600 hover:bg-fuchsia-50'
+                                : item.platform === 'TikTok'
+                                ? 'hover:text-slate-900 hover:bg-slate-100'
                                 : 'hover:text-blue-600 hover:bg-blue-50'
                             }`}
                             title={`Buka Halaman ${item.platform}`}
@@ -763,11 +803,12 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
                   </label>
                   <select
                     value={formPlatform}
-                    onChange={(e) => setFormPlatform(e.target.value as 'Instagram' | 'Facebook')}
+                    onChange={(e) => setFormPlatform(e.target.value as 'Instagram' | 'Facebook' | 'TikTok')}
                     className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2.5 font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 cursor-pointer"
                   >
                     <option value="Instagram">Instagram (Crawler Open Graph Publik)</option>
                     <option value="Facebook">Facebook (Crawler Fanspage Publik)</option>
+                    <option value="TikTok">TikTok (Public Video Scraper — Tanpa Login)</option>
                   </select>
                 </div>
 
@@ -776,8 +817,8 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
                   {/* Handle / Username Input */}
                   <div>
                     <label className="text-[11px] font-semibold text-slate-700 block mb-1">
-                      {formPlatform === 'Instagram'
-                        ? 'Username / Handle Instagram *'
+                      {formPlatform === 'Instagram' || formPlatform === 'TikTok'
+                        ? (formPlatform === 'TikTok' ? 'Username / Handle TikTok *' : 'Username / Handle Instagram *')
                         : 'Nama Fanspage / ID Halaman Facebook *'}
                     </label>
                     <input
@@ -786,6 +827,8 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
                       placeholder={
                         formPlatform === 'Instagram'
                           ? 'Contoh: @kompascom atau narasinewsroom'
+                          : formPlatform === 'TikTok'
+                          ? 'Contoh: @mbg.kreator atau gurupenggerakdesa'
                           : 'Contoh: Kompas.com atau CNNIndonesia'
                       }
                       value={formHandle}
@@ -793,7 +836,7 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
                       className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
                     />
                     <p className="text-[10px] text-slate-400 mt-1">
-                      {formPlatform === 'Instagram'
+                      {formPlatform === 'Instagram' || formPlatform === 'TikTok'
                         ? 'Otomatis diformat dengan awalan @.'
                         : 'Masukkan nama resmi fanspage publik Facebook.'}
                     </p>
@@ -856,6 +899,9 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
                     />
                     <p className="text-[10px] text-slate-400 mt-1">
                       Dibiarkan kosong akan di-generate otomatis dari handle.
+                      {formPlatform === 'TikTok' && (
+                        <span className="block text-slate-400">Contoh: https://www.tiktok.com/@username</span>
+                      )}
                     </p>
                   </div>
 

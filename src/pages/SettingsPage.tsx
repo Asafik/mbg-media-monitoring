@@ -28,6 +28,7 @@ import {
   faFacebook,
 } from '@fortawesome/free-brands-svg-icons'
 import { SourcesPage } from './SourcesPage'
+import { SentimentPlatformConfig } from '../components/SentimentPlatformConfig'
 import {
   getApiKey,
   saveApiKey,
@@ -1157,6 +1158,10 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       {/* SUB-MENU 4: LAINNYA (SISTEM, CACHE & ALARM) */}
       {activeTab === 'lainnya' && (
         <div className="space-y-5 animate-in fade-in duration-200">
+
+          {/* Konfigurasi Distribusi Sentimen per Platform */}
+          <SentimentPlatformConfig />
+
           {/* Pembersihan Cache & Local Storage */}
           <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-xs space-y-4">
             <div className="flex items-center justify-between border-b border-slate-100 pb-2.5">
