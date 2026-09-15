@@ -6,7 +6,7 @@ interface DbTargetAccount {
   id: string
   handle: string
   name: string
-  platform: 'Instagram' | 'Facebook'
+  platform: 'Instagram' | 'Facebook' | 'TikTok'
   category: string
   is_active: boolean
   is_default: boolean
@@ -37,7 +37,7 @@ function mapModelToDb(item: MonitoredSourceItem): DbTargetAccount {
     id: item.id,
     handle: item.handle,
     name: item.name,
-    platform: item.platform as 'Instagram' | 'Facebook',
+    platform: item.platform as 'Instagram' | 'Facebook' | 'TikTok',
     category: item.category,
     is_active: item.isActive,
     is_default: item.isDefault,

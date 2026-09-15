@@ -36,11 +36,14 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
       const saved = localStorage.getItem('mbg_monitored_sources')
       if (saved) {
         const parsed: MonitoredSourceItem[] = JSON.parse(saved)
-        // Pastikan akun IG dan FB ada, jika belum ada FB tambahkan default FB
+        // Pastikan akun FB dan TikTok media besar ada
         const hasFb = parsed.some((s) => s.platform === 'Facebook')
-        if (!hasFb) {
-          const fbDefaults = defaultMonitoredSources.filter((s) => s.platform === 'Facebook')
-          const merged = [...parsed, ...fbDefaults]
+        const hasMajorTt = parsed.some((s) => s.platform === 'TikTok' && (s.handle === '@kompascom' || s.handle === '@detikcom'))
+        if (!hasFb || !hasMajorTt) {
+          const nonTtAndNonFb = parsed.filter((s) => s.platform !== 'TikTok' && (hasFb || s.platform !== 'Facebook'))
+          const fbDefaults = !hasFb ? defaultMonitoredSources.filter((s) => s.platform === 'Facebook') : []
+          const ttDefaults = defaultMonitoredSources.filter((s) => s.platform === 'TikTok')
+          const merged = [...nonTtAndNonFb, ...fbDefaults, ...ttDefaults]
           localStorage.setItem('mbg_monitored_sources', JSON.stringify(merged))
           return merged
         }
