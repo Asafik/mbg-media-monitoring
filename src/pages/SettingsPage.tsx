@@ -3,12 +3,17 @@ import {
   Activity,
   Bell,
   Check,
+  CheckCircle2,
   Database,
+  Eye,
+  EyeOff,
   HardDrive,
   Info,
+  KeyRound,
   Plus,
   Radio,
   RefreshCw,
+  RotateCcw,
   Save,
   ShieldAlert,
   Tag,
@@ -16,6 +21,12 @@ import {
 } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
 import { SourcesPage } from './SourcesPage'
+import {
+  getApiKey,
+  saveApiKey,
+  validateYouTubeApiKey,
+  DEFAULT_YOUTUBE_API_KEY,
+} from '../services/apiKeyService'
 
 export type SettingsTab = 'koneksi' | 'akun' | 'keyword' | 'lainnya'
 
@@ -83,6 +94,33 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   const [isTestingApi, setIsTestingApi] = useState(false)
   const [apiTestMessage, setApiTestMessage] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<SettingsTab>(initialTab)
+
+  // YouTube API Key State (Tersimpan di Supabase DB)
+  const [youtubeApiKey, setYoutubeApiKey] = useState(DEFAULT_YOUTUBE_API_KEY)
+  const [showKeyText, setShowKeyText] = useState(false)
+  const [isSavingKey, setIsSavingKey] = useState(false)
+  const [isValidatingKey, setIsValidatingKey] = useState(false)
+  const [keyValidationMessage, setKeyValidationMessage] = useState<{
+    valid?: boolean
+    text: string
+  } | null>(null)
+  const [isKeyFromDb, setIsKeyFromDb] = useState(false)
+
+  // Muat YouTube API Key dari Supabase saat halaman dibuka
+  useEffect(() => {
+    let isMounted = true
+    const loadKey = async () => {
+      const res = await getApiKey('youtube_api_key', DEFAULT_YOUTUBE_API_KEY)
+      if (isMounted) {
+        setYoutubeApiKey(res.key)
+        setIsKeyFromDb(res.fromDb)
+      }
+    }
+    loadKey()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   useEffect(() => {
     if (initialTab) {
@@ -235,6 +273,58 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
     }, 1100)
   }
 
+  const handleSaveYouTubeKey = async () => {
+    if (!youtubeApiKey.trim()) return
+    setIsSavingKey(true)
+    const res = await saveApiKey(
+      'youtube_api_key',
+      youtubeApiKey.trim(),
+      'YouTube',
+      'Official YouTube Data API v3 Key'
+    )
+    setIsSavingKey(false)
+    if (res.success) {
+      setIsKeyFromDb(true)
+      setKeyValidationMessage({
+        valid: true,
+        text: 'API Key YouTube berhasil disimpan ke database Supabase dan langsung aktif!',
+      })
+      setTimeout(() => setKeyValidationMessage(null), 5000)
+    } else {
+      setKeyValidationMessage({
+        valid: false,
+        text: `Gagal menyimpan ke database: ${res.error}`,
+      })
+      setTimeout(() => setKeyValidationMessage(null), 5000)
+    }
+  }
+
+  const handleTestYouTubeKey = async () => {
+    setIsValidatingKey(true)
+    const res = await validateYouTubeApiKey(youtubeApiKey)
+    setIsValidatingKey(false)
+    setKeyValidationMessage({
+      valid: res.valid,
+      text: res.message,
+    })
+    setTimeout(() => setKeyValidationMessage(null), 6000)
+  }
+
+  const handleResetYouTubeKey = async () => {
+    setYoutubeApiKey(DEFAULT_YOUTUBE_API_KEY)
+    await saveApiKey(
+      'youtube_api_key',
+      DEFAULT_YOUTUBE_API_KEY,
+      'YouTube',
+      'Official YouTube Data API v3 Key'
+    )
+    setKeyValidationMessage({
+      valid: true,
+      text: 'API Key YouTube berhasil di-reset ke key bawaan default di database.',
+    })
+    setTimeout(() => setKeyValidationMessage(null), 4000)
+  }
+
   return (
     <div className="space-y-6 pb-10 animate-section">
       {/* Title Header */}
@@ -326,6 +416,150 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               <span className="text-emerald-700 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded font-semibold text-[10px]">
                 REST API & Realtime Terhubung
               </span>
+            </div>
+          </div>
+
+          {/* Form Manajemen API Key (Database Supabase) */}
+          <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-xs space-y-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-100 pb-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <KeyRound className="w-4 h-4 text-blue-600" />
+                  <h3 className="text-sm font-bold text-slate-900">
+                    Manajemen API Key & Kredensial Pengumpul Data (Tersimpan di Database)
+                  </h3>
+                  <span className="bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    {isKeyFromDb ? 'Tersimpan di DB Supabase' : 'Kredensial Aktif'}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Ubah atau ganti API Key YouTube secara langsung ke database tanpa perlu menyentuh file environment atau restart aplikasi.
+                </p>
+              </div>
+            </div>
+
+            {/* Penjelasan Status Kebutuhan API Key per Platform */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
+              <div className="p-3 bg-red-50/70 border border-red-200 rounded-lg">
+                <span className="font-bold text-red-900 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-red-500" /> YouTube Data API
+                </span>
+                <span className="text-[11px] text-red-700 font-semibold mt-1 block">Wajib API Key</span>
+                <span className="text-[10px] text-slate-600 block mt-0.5">Kunci resmi Google Cloud Console (Kuota gratis 10.000 poin/hari).</span>
+              </div>
+
+              <div className="p-3 bg-fuchsia-50/70 border border-fuchsia-200 rounded-lg">
+                <span className="font-bold text-fuchsia-900 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-fuchsia-500" /> Instagram Scraper
+                </span>
+                <span className="text-[11px] text-emerald-700 font-semibold mt-1 block">Tanpa API Key & Login</span>
+                <span className="text-[10px] text-slate-600 block mt-0.5">Open Graph public crawler dari 8 media berita, bebas kuota.</span>
+              </div>
+
+              <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-lg">
+                <span className="font-bold text-blue-900 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-blue-500" /> Facebook Crawler
+                </span>
+                <span className="text-[11px] text-emerald-700 font-semibold mt-1 block">Tanpa API Key & Login</span>
+                <span className="text-[10px] text-slate-600 block mt-0.5">News crawler publik dari 4 fanspage resmi, bebas kuota.</span>
+              </div>
+
+              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                <span className="font-bold text-slate-900 flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-slate-400" /> TikTok API
+                </span>
+                <span className="text-[11px] text-slate-600 font-semibold mt-1 block">Creative API / Crawler</span>
+                <span className="text-[10px] text-slate-500 block mt-0.5">Pencarian tagar & video publik seputar isu MBG.</span>
+              </div>
+            </div>
+
+            {/* Input Form API Key YouTube */}
+            <div className="space-y-3 pt-2">
+              <div>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <span>YouTube Data API v3 Key:</span>
+                    <span className="text-[10px] font-normal text-slate-400 font-mono">(Google Cloud Console)</span>
+                  </label>
+                  <span className="text-[11px] text-slate-500">
+                    Penyimpanan: <strong className="text-emerald-700 font-medium">Supabase PostgreSQL (app_settings)</strong>
+                  </span>
+                </div>
+
+                <div className="relative flex items-center">
+                  <input
+                    type={showKeyText ? 'text' : 'password'}
+                    value={youtubeApiKey}
+                    onChange={(e) => setYoutubeApiKey(e.target.value)}
+                    placeholder="Masukkan Google YouTube Data API v3 Key..."
+                    className="w-full text-xs font-mono bg-slate-50 border border-slate-200 rounded-lg pl-3 pr-10 py-2.5 focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowKeyText(!showKeyText)}
+                    className="absolute right-3 text-slate-400 hover:text-slate-600 cursor-pointer p-1"
+                    title={showKeyText ? 'Sembunyikan Key' : 'Tampilkan Key'}
+                  >
+                    {showKeyText ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <p className="text-[11px] text-slate-400 mt-1">
+                  Bila Anda ingin mengganti kuota atau menggunakan API key Google Anda sendiri, tempel di atas dan klik <strong>Simpan Key ke Database</strong>.
+                </p>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center justify-between gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={handleResetYouTubeKey}
+                  className="text-xs text-slate-600 hover:text-slate-900 border border-slate-200 bg-white hover:bg-slate-50 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs"
+                >
+                  <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+                  <span>Reset ke Key Bawaan</span>
+                </button>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleTestYouTubeKey}
+                    disabled={isValidatingKey || !youtubeApiKey.trim()}
+                    className="text-xs font-semibold text-slate-700 border border-slate-200 bg-white hover:bg-slate-50 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 text-slate-500 ${isValidatingKey ? 'animate-spin' : ''}`} />
+                    <span>{isValidatingKey ? 'Menguji API Key...' : 'Uji / Validasi Key'}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleSaveYouTubeKey}
+                    disabled={isSavingKey || !youtubeApiKey.trim()}
+                    className="text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 px-4 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
+                  >
+                    <Save className={`w-3.5 h-3.5 ${isSavingKey ? 'animate-spin' : ''}`} />
+                    <span>{isSavingKey ? 'Menyimpan...' : 'Simpan Key ke Database'}</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Validation / Success Alert */}
+              {keyValidationMessage && (
+                <div
+                  className={`p-3 rounded-lg text-xs flex items-center gap-2 animate-in fade-in ${
+                    keyValidationMessage.valid
+                      ? 'bg-emerald-50 border border-emerald-200 text-emerald-900'
+                      : 'bg-rose-50 border border-rose-200 text-rose-900'
+                  }`}
+                >
+                  {keyValidationMessage.valid ? (
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                  ) : (
+                    <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
+                  )}
+                  <span className="font-medium">{keyValidationMessage.text}</span>
+                </div>
+              )}
             </div>
           </div>
 

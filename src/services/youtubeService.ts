@@ -1,9 +1,15 @@
 import { supabase } from '../lib/supabase'
 import type { DetailedContentItem, CommentItem } from '../types/dashboard'
 
-const YOUTUBE_API_KEY =
-  import.meta.env.VITE_YOUTUBE_API_KEY ||
-  'AIzaSyA0XLpI6IGMC00cJ68SXpfNkczzuXrTDko'
+import { DEFAULT_YOUTUBE_API_KEY } from './apiKeyService'
+
+export function getActiveYouTubeApiKey(): string {
+  try {
+    const fromStorage = localStorage.getItem('mbg_youtube_api_key')
+    if (fromStorage && fromStorage.trim()) return fromStorage.trim()
+  } catch {}
+  return DEFAULT_YOUTUBE_API_KEY
+}
 
 export type YouTubeIssueTopic =
   | 'kritis'
@@ -142,7 +148,8 @@ export async function fetchTop5YouTubeVideos(
 ): Promise<DetailedContentItem[]> {
   const rawQuery = getSearchQueryForTopic(topic)
   const encodedQuery = encodeURIComponent(rawQuery)
-  const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodedQuery}&type=video&regionCode=ID&relevanceLanguage=id&order=relevance&maxResults=5&key=${YOUTUBE_API_KEY}`
+  const apiKey = getActiveYouTubeApiKey()
+  const searchUrl = `https://www.googleapis.com/youtube/v3/search?part=snippet&q=${encodedQuery}&type=video&regionCode=ID&relevanceLanguage=id&order=relevance&maxResults=5&key=${apiKey}`
 
   const searchRes = await fetch(searchUrl)
   const searchData = await searchRes.json()
@@ -159,7 +166,7 @@ export async function fetchTop5YouTubeVideos(
   if (videoIds.length === 0) return []
 
   // Fetch full video statistics (viewCount, commentCount)
-  const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoIds.join(',')}&key=${YOUTUBE_API_KEY}`
+  const detailsUrl = `https://www.googleapis.com/youtube/v3/videos?part=snippet,statistics&id=${videoIds.join(',')}&key=${apiKey}`
   const detailsRes = await fetch(detailsUrl)
   const detailsData = await detailsRes.json()
 
@@ -288,9 +295,10 @@ export async function fetchYouTubeComments(
 
   const allComments: CommentItem[] = []
 
+  const apiKey = getActiveYouTubeApiKey()
   for (const video of videos) {
     try {
-      const url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${video.id}&maxResults=4&order=relevance&key=${YOUTUBE_API_KEY}`
+      const url = `https://www.googleapis.com/youtube/v3/commentThreads?part=snippet&videoId=${video.id}&maxResults=4&order=relevance&key=${apiKey}`
       const res = await fetch(url)
       const data = await res.json()
 
