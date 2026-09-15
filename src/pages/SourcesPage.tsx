@@ -13,6 +13,14 @@ import {
   Trash2,
   X,
 } from 'lucide-react'
+import {
+  getTargetAccounts,
+  createTargetAccount,
+  updateTargetAccount,
+  toggleTargetAccountActive,
+  deleteTargetAccount,
+  resetTargetAccountsDefault,
+} from '../services/targetAccountsService'
 import React, { useMemo, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { defaultMonitoredSources } from '../data/monitoredSourcesData'
@@ -62,6 +70,30 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
   const [formCategory, setFormCategory] = useState('')
   const [formProfileUrl, setFormProfileUrl] = useState('')
   const [formIsActive, setFormIsActive] = useState(true)
+
+  // Database & Sync States
+  const [isDbConnected, setIsDbConnected] = useState(true)
+  const [isSyncingDb, setIsSyncingDb] = useState(false)
+
+  // Ambil data terbaru dari Supabase saat halaman dibuka
+  React.useEffect(() => {
+    let isMounted = true
+    const loadFromDb = async () => {
+      setIsSyncingDb(true)
+      const res = await getTargetAccounts()
+      if (isMounted) {
+        if (res.data.length > 0) {
+          setSourcesList(res.data)
+        }
+        setIsDbConnected(res.fromDb)
+        setIsSyncingDb(false)
+      }
+    }
+    loadFromDb()
+    return () => {
+      isMounted = false
+    }
+  }, [])
 
   // Dengarkan sinyal pembersihan cache global
   React.useEffect(() => {
@@ -165,22 +197,19 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
 
     if (editingItem) {
       // Mode Edit
-      const updated = sourcesList.map((item) => {
-        if (item.id === editingItem.id) {
-          return {
-            ...item,
-            handle: cleanHandle,
-            name: formName.trim() || cleanHandle,
-            platform: formPlatform,
-            category: formCategory.trim() || (formPlatform === 'Instagram' ? 'Media Berita Nasional' : 'Portal Berita Digital'),
-            profileUrl: finalUrl,
-            isActive: formIsActive,
-          }
-        }
-        return item
-      })
+      const updatedItem: MonitoredSourceItem = {
+        ...editingItem,
+        handle: cleanHandle,
+        name: formName.trim() || cleanHandle,
+        platform: formPlatform,
+        category: formCategory.trim() || (formPlatform === 'Instagram' ? 'Media Berita Nasional' : 'Portal Berita Digital'),
+        profileUrl: finalUrl,
+        isActive: formIsActive,
+      }
+      const updated = sourcesList.map((item) => (item.id === editingItem.id ? updatedItem : item))
       saveSources(updated)
-      setSuccessMessage(`Target ${formPlatform} "${cleanHandle}" berhasil diperbarui.`)
+      updateTargetAccount(updatedItem)
+      setSuccessMessage(`Target ${formPlatform} "${cleanHandle}" berhasil diperbarui di database.`)
     } else {
       // Mode Tambah Baru
       const newItem: MonitoredSourceItem = {
@@ -197,7 +226,8 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
       }
       const updated = [newItem, ...sourcesList]
       saveSources(updated)
-      setSuccessMessage(`Target ${formPlatform} "${cleanHandle}" berhasil ditambahkan.`)
+      createTargetAccount(newItem)
+      setSuccessMessage(`Target ${formPlatform} "${cleanHandle}" berhasil disimpan ke database Supabase.`)
     }
 
     closeModal()
@@ -205,41 +235,44 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
   }
 
   const handleToggleActive = (id: string) => {
-    const updated = sourcesList.map((item) => {
-      if (item.id === id) {
-        return { ...item, isActive: !item.isActive }
-      }
-      return item
-    })
-    saveSources(updated)
-    const target = updated.find((s) => s.id === id)
+    const target = sourcesList.find((s) => s.id === id)
     if (target) {
+      const nextActive = !target.isActive
+      const updated = sourcesList.map((item) =>
+        item.id === id ? { ...item, isActive: nextActive } : item
+      )
+      saveSources(updated)
+      toggleTargetAccountActive(id, nextActive)
       setSuccessMessage(
         `Status ${target.platform} ${target.handle} diubah menjadi ${
-          target.isActive ? 'Aktif' : 'Tidak Aktif'
-        }.`
+          nextActive ? 'Aktif' : 'Tidak Aktif'
+        } di database.`
       )
       setTimeout(() => setSuccessMessage(null), 3000)
     }
   }
 
   const handleDeleteSource = (id: string, handle: string, platform: string) => {
-    if (window.confirm(`Hapus akun ${platform} "${handle}" dari daftar target pantauan?`)) {
+    if (window.confirm(`Hapus akun ${platform} "${handle}" dari database target pantauan?`)) {
       const updated = sourcesList.filter((item) => item.id !== id)
       saveSources(updated)
-      setSuccessMessage(`Target ${platform} "${handle}" berhasil dihapus.`)
+      deleteTargetAccount(id)
+      setSuccessMessage(`Target ${platform} "${handle}" berhasil dihapus dari database Supabase.`)
       setTimeout(() => setSuccessMessage(null), 3000)
     }
   }
 
-  const handleResetToDefault = () => {
+  const handleResetToDefault = async () => {
     if (
       window.confirm(
-        'Kembalikan seluruh daftar akun ke 12 media berita default (8 Instagram + 4 Facebook)?'
+        'Kembalikan seluruh daftar akun ke 12 media berita default di database (8 Instagram + 4 Facebook)?'
       )
     ) {
-      saveSources(defaultMonitoredSources)
-      setSuccessMessage('Daftar target berhasil di-reset ke default (Instagram & Facebook).')
+      setIsSyncingDb(true)
+      const res = await resetTargetAccountsDefault()
+      setSourcesList(res.data)
+      setIsSyncingDb(false)
+      setSuccessMessage('Daftar target berhasil di-reset ke 12 media default di database Supabase.')
       setTimeout(() => setSuccessMessage(null), 3500)
     }
   }
@@ -287,21 +320,28 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
       ) : (
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">
-              Daftar Target Akun & Fanspage Terpadu (Instagram & Facebook)
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="text-sm font-bold text-slate-900">
+                Daftar Target Akun & Fanspage Terpadu (Instagram & Facebook)
+              </h3>
+              <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                <span className={`w-1.5 h-1.5 rounded-full ${isSyncingDb ? 'bg-amber-500 animate-spin' : isDbConnected ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'}`} />
+                {isSyncingDb ? 'Sinkron DB...' : isDbConnected ? 'DB Supabase Terhubung' : 'Cache Lokal'}
+              </span>
+            </div>
             <p className="text-xs text-slate-500 mt-0.5">
-              Kelola seluruh akun Instagram dan Fanspage Facebook sasaran crawler dalam satu tabel terpusat.
+              Kelola seluruh akun Instagram dan Fanspage Facebook sasaran crawler langsung terhubung dengan database Supabase.
             </p>
           </div>
           <div className="flex items-center gap-2 self-start sm:self-auto">
             <button
               type="button"
               onClick={handleResetToDefault}
-              className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs"
+              disabled={isSyncingDb}
+              className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs disabled:opacity-50"
               title="Kembalikan ke Akun Default"
             >
-              <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
+              <RotateCcw className={`w-3.5 h-3.5 text-slate-500 ${isSyncingDb ? 'animate-spin' : ''}`} />
               <span>Reset Default</span>
             </button>
             <button
