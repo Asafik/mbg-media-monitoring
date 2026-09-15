@@ -1,5 +1,4 @@
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faFacebook } from '@fortawesome/free-brands-svg-icons'
+
 import {
   Activity,
   Bell,
@@ -20,12 +19,7 @@ import { SourcesPage } from './SourcesPage'
 
 export type SettingsTab = 'koneksi' | 'akun' | 'keyword' | 'lainnya'
 
-const DEFAULT_FB_PAGES = [
-  { name: 'Kompas.com', label: 'Media Nasional Terverifikasi', status: 'Crawler Publik Aktif' },
-  { name: 'detikcom', label: 'Portal Berita Digital', status: 'Crawler Publik Aktif' },
-  { name: 'CNN Indonesia', label: 'Berita & Investigasi Kebijakan', status: 'Crawler Publik Aktif' },
-  { name: 'Badan Gizi Nasional (BGN)', label: 'Fanspage Resmi Program MBG', status: 'Pantauan Langsung' },
-]
+
 
 
 const DEFAULT_PRIMARY_KEYWORDS = [
@@ -436,38 +430,6 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
         <div className="space-y-5 animate-in fade-in duration-200">
           {/* Unified Target Akun Management */}
           <SourcesPage embedded={true} />
-
-          {/* Target Halaman / Fanspage Facebook */}
-          <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-xs space-y-4">
-            <div className="border-b border-slate-100 pb-3">
-              <div className="flex items-center gap-2">
-                <FontAwesomeIcon icon={faFacebook} className="text-base text-blue-600" />
-                <h3 className="text-sm font-bold text-slate-900">
-                  Target Fanspage Publik Facebook (Facebook Media Sources)
-                </h3>
-                <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold px-2 py-0.5 rounded">
-                  {DEFAULT_FB_PAGES.length} Sumber Berita
-                </span>
-              </div>
-              <p className="text-xs text-slate-400 mt-0.5">
-                Crawler publik menyerap berita seputar MBG secara berkala dari portal berita dan institusi resmi berikut tanpa login.
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
-              {DEFAULT_FB_PAGES.map((page) => (
-                <div key={page.name} className="p-3 bg-slate-50 border border-slate-200/80 rounded-lg text-xs flex items-center justify-between">
-                  <div className="min-w-0 flex-1">
-                    <span className="font-bold text-slate-900 block truncate">{page.name}</span>
-                    <span className="text-[11px] text-slate-500 block truncate mt-0.5">{page.label}</span>
-                  </div>
-                  <span className="inline-flex items-center text-[10px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded shrink-0">
-                    {page.status}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
         </div>
       )}
 

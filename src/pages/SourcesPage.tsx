@@ -1,10 +1,10 @@
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faInstagram } from '@fortawesome/free-brands-svg-icons'
+import { faInstagram, faFacebook } from '@fortawesome/free-brands-svg-icons'
 import {
   CheckCircle2,
   ExternalLink,
-  FileText,
   Info,
+  Pencil,
   Plus,
   Radio,
   RefreshCw,
@@ -27,12 +27,15 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
       const saved = localStorage.getItem('mbg_monitored_sources')
       if (saved) {
         const parsed: MonitoredSourceItem[] = JSON.parse(saved)
-        // Pastikan hanya akun Instagram yang dimuat sesuai fokus crawler saat ini
-        const igOnly = parsed.filter((item) => item.platform === 'Instagram')
-        if (igOnly.length > 0) {
-          localStorage.setItem('mbg_monitored_sources', JSON.stringify(igOnly))
-          return igOnly
+        // Pastikan akun IG dan FB ada, jika belum ada FB tambahkan default FB
+        const hasFb = parsed.some((s) => s.platform === 'Facebook')
+        if (!hasFb) {
+          const fbDefaults = defaultMonitoredSources.filter((s) => s.platform === 'Facebook')
+          const merged = [...parsed, ...fbDefaults]
+          localStorage.setItem('mbg_monitored_sources', JSON.stringify(merged))
+          return merged
         }
+        return parsed
       }
     } catch {
       // Fallback
@@ -41,10 +44,23 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
     return defaultMonitoredSources
   })
 
+  // Filter States
+  const [selectedPlatform, setSelectedPlatform] = useState<'semua' | 'Instagram' | 'Facebook'>('semua')
   const [selectedStatus, setSelectedStatus] = useState<'semua' | 'aktif' | 'nonaktif'>('semua')
   const [searchTerm, setSearchTerm] = useState('')
-  const [showAddForm, setShowAddForm] = useState(false)
   const [successMessage, setSuccessMessage] = useState<string | null>(null)
+
+  // Modal States for Add & Edit
+  const [isModalOpen, setIsModalOpen] = useState(false)
+  const [editingItem, setEditingItem] = useState<MonitoredSourceItem | null>(null)
+
+  // Modal Form Inputs
+  const [formPlatform, setFormPlatform] = useState<'Instagram' | 'Facebook'>('Instagram')
+  const [formHandle, setFormHandle] = useState('')
+  const [formName, setFormName] = useState('')
+  const [formCategory, setFormCategory] = useState('')
+  const [formProfileUrl, setFormProfileUrl] = useState('')
+  const [formIsActive, setFormIsActive] = useState(true)
 
   // Dengarkan sinyal pembersihan cache global
   React.useEffect(() => {
@@ -55,13 +71,6 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
     return () => window.removeEventListener('mbg-cache-cleared', handleCacheCleared)
   }, [])
 
-  // Form Inputs
-  const [newHandle, setNewHandle] = useState('')
-  const [newName, setNewName] = useState('')
-  const [newCategory, setNewCategory] = useState('')
-  const [newProfileUrl, setNewProfileUrl] = useState('')
-  const [newIsActive, setNewIsActive] = useState<boolean>(true)
-
   const saveSources = (updated: MonitoredSourceItem[]) => {
     setSourcesList(updated)
     try {
@@ -71,74 +80,126 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
     }
   }
 
-  // Filter Logic
-  const filteredSources = useMemo(() => {
-    return sourcesList.filter((item) => {
-      const matchStatus =
-        selectedStatus === 'semua' ||
-        (selectedStatus === 'aktif' && item.isActive) ||
-        (selectedStatus === 'nonaktif' && !item.isActive)
-      const matchSearch =
-        item.handle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        item.category.toLowerCase().includes(searchTerm.toLowerCase())
-      return matchStatus && matchSearch
-    })
-  }, [sourcesList, selectedStatus, searchTerm])
-
-  // KPI Calculations (Instagram Specific)
+  // KPI Calculations
   const stats = useMemo(() => {
     const total = sourcesList.length
     const activeCount = sourcesList.filter((s) => s.isActive).length
     const inactiveCount = sourcesList.filter((s) => !s.isActive).length
-    const totalPosts = sourcesList.reduce((sum, s) => sum + (s.postsCount || 0), 0)
-    const nationalMedia = sourcesList.filter((s) =>
-      s.category.toLowerCase().includes('nasional') || s.category.toLowerCase().includes('resmi')
-    ).length
-    return { total, activeCount, inactiveCount, totalPosts, nationalMedia }
+    const igCount = sourcesList.filter((s) => s.platform === 'Instagram').length
+    const fbCount = sourcesList.filter((s) => s.platform === 'Facebook').length
+    return { total, activeCount, inactiveCount, igCount, fbCount }
   }, [sourcesList])
 
-  const handleAddSource = (e: React.FormEvent) => {
+  // Filter Logic
+  const filteredSources = useMemo(() => {
+    return sourcesList.filter((item) => {
+      const matchPlatform =
+        selectedPlatform === 'semua' || item.platform === selectedPlatform
+
+      const matchStatus =
+        selectedStatus === 'semua' ||
+        (selectedStatus === 'aktif' && item.isActive) ||
+        (selectedStatus === 'nonaktif' && !item.isActive)
+
+      const term = searchTerm.toLowerCase()
+      const matchSearch =
+        item.handle.toLowerCase().includes(term) ||
+        item.name.toLowerCase().includes(term) ||
+        item.category.toLowerCase().includes(term) ||
+        item.platform.toLowerCase().includes(term)
+
+      return matchPlatform && matchStatus && matchSearch
+    })
+  }, [sourcesList, selectedPlatform, selectedStatus, searchTerm])
+
+  // Modal Handlers
+  const openAddModal = (defaultPlat: 'Instagram' | 'Facebook' = 'Instagram') => {
+    setEditingItem(null)
+    setFormPlatform(defaultPlat)
+    setFormHandle('')
+    setFormName('')
+    setFormCategory('')
+    setFormProfileUrl('')
+    setFormIsActive(true)
+    setIsModalOpen(true)
+  }
+
+  const openEditModal = (item: MonitoredSourceItem) => {
+    setEditingItem(item)
+    setFormPlatform((item.platform as 'Instagram' | 'Facebook') || 'Instagram')
+    setFormHandle(item.handle)
+    setFormName(item.name)
+    setFormCategory(item.category)
+    setFormProfileUrl(item.profileUrl)
+    setFormIsActive(item.isActive)
+    setIsModalOpen(true)
+  }
+
+  const closeModal = () => {
+    setIsModalOpen(false)
+    setEditingItem(null)
+  }
+
+  const handleModalSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    let cleanHandle = newHandle.trim()
+    let cleanHandle = formHandle.trim()
     if (!cleanHandle) return
 
-    if (!cleanHandle.startsWith('@')) {
-      cleanHandle = `@${cleanHandle}`
+    if (formPlatform === 'Instagram') {
+      if (!cleanHandle.startsWith('@')) {
+        cleanHandle = `@${cleanHandle}`
+      }
+    } else {
+      // Facebook: bersihkan @ jika ada
+      cleanHandle = cleanHandle.replace(/^@/, '')
     }
 
-    const rawUsername = cleanHandle.replace('@', '')
-    const generatedUrl =
-      newProfileUrl.trim() || `https://www.instagram.com/${rawUsername}/`
+    const rawId = cleanHandle.replace(/^@/, '')
+    const defaultUrl =
+      formPlatform === 'Instagram'
+        ? `https://www.instagram.com/${rawId}/`
+        : `https://www.facebook.com/${encodeURIComponent(cleanHandle)}`
 
-    const newItem: MonitoredSourceItem = {
-      id: `src-ig-${Date.now()}`,
-      handle: cleanHandle,
-      name: newName.trim() || cleanHandle,
-      platform: 'Instagram',
-      category: newCategory.trim() || 'Media Berita Publik',
-      isActive: newIsActive,
-      isDefault: false,
-      postsCount: 0,
-      lastChecked: 'Baru ditambahkan',
-      profileUrl: generatedUrl,
+    const finalUrl = formProfileUrl.trim() || defaultUrl
+
+    if (editingItem) {
+      // Mode Edit
+      const updated = sourcesList.map((item) => {
+        if (item.id === editingItem.id) {
+          return {
+            ...item,
+            handle: cleanHandle,
+            name: formName.trim() || cleanHandle,
+            platform: formPlatform,
+            category: formCategory.trim() || (formPlatform === 'Instagram' ? 'Media Berita Nasional' : 'Portal Berita Digital'),
+            profileUrl: finalUrl,
+            isActive: formIsActive,
+          }
+        }
+        return item
+      })
+      saveSources(updated)
+      setSuccessMessage(`Target ${formPlatform} "${cleanHandle}" berhasil diperbarui.`)
+    } else {
+      // Mode Tambah Baru
+      const newItem: MonitoredSourceItem = {
+        id: `src-${formPlatform.toLowerCase()}-${Date.now()}`,
+        handle: cleanHandle,
+        name: formName.trim() || cleanHandle,
+        platform: formPlatform,
+        category: formCategory.trim() || (formPlatform === 'Instagram' ? 'Media Berita Publik' : 'Portal Berita Digital'),
+        isActive: formIsActive,
+        isDefault: false,
+        postsCount: 0,
+        lastChecked: 'Baru ditambahkan',
+        profileUrl: finalUrl,
+      }
+      const updated = [newItem, ...sourcesList]
+      saveSources(updated)
+      setSuccessMessage(`Target ${formPlatform} "${cleanHandle}" berhasil ditambahkan.`)
     }
 
-    const updated = [newItem, ...sourcesList]
-    saveSources(updated)
-
-    setNewHandle('')
-    setNewName('')
-    setNewCategory('')
-    setNewProfileUrl('')
-    setNewIsActive(true)
-    setShowAddForm(false)
-
-    setSuccessMessage(
-      `Akun Instagram ${cleanHandle} berhasil ditambahkan dengan status ${
-        newIsActive ? 'Aktif' : 'Tidak Aktif'
-      }.`
-    )
+    closeModal()
     setTimeout(() => setSuccessMessage(null), 3500)
   }
 
@@ -153,7 +214,7 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
     const target = updated.find((s) => s.id === id)
     if (target) {
       setSuccessMessage(
-        `Status pantauan ${target.handle} diubah menjadi ${
+        `Status ${target.platform} ${target.handle} diubah menjadi ${
           target.isActive ? 'Aktif' : 'Tidak Aktif'
         }.`
       )
@@ -161,11 +222,11 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
     }
   }
 
-  const handleDeleteSource = (id: string, handle: string) => {
-    if (window.confirm(`Hapus akun Instagram ${handle} dari daftar pantauan?`)) {
+  const handleDeleteSource = (id: string, handle: string, platform: string) => {
+    if (window.confirm(`Hapus akun ${platform} "${handle}" dari daftar target pantauan?`)) {
       const updated = sourcesList.filter((item) => item.id !== id)
       saveSources(updated)
-      setSuccessMessage(`Akun ${handle} berhasil dihapus dari daftar pantauan.`)
+      setSuccessMessage(`Target ${platform} "${handle}" berhasil dihapus.`)
       setTimeout(() => setSuccessMessage(null), 3000)
     }
   }
@@ -173,31 +234,31 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
   const handleResetToDefault = () => {
     if (
       window.confirm(
-        'Kembalikan seluruh daftar akun ke 8 media berita Instagram default?'
+        'Kembalikan seluruh daftar akun ke 12 media berita default (8 Instagram + 4 Facebook)?'
       )
     ) {
       saveSources(defaultMonitoredSources)
-      setSuccessMessage('Daftar akun berhasil di-reset ke 8 media Instagram default.')
-      setTimeout(() => setSuccessMessage(null), 3000)
+      setSuccessMessage('Daftar target berhasil di-reset ke default (Instagram & Facebook).')
+      setTimeout(() => setSuccessMessage(null), 3500)
     }
   }
 
   return (
     <div className="space-y-5 animate-section">
-      {/* Header */}
+      {/* Header Section */}
       {!embedded ? (
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-lg bg-fuchsia-50 text-fuchsia-600 flex items-center justify-center">
-                <FontAwesomeIcon icon={faInstagram} className="text-sm" />
+              <div className="w-7 h-7 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center">
+                <Radio className="text-sm" />
               </div>
               <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
-                Target Akun Pantauan Instagram
+                Target Akun Pantauan Media (Instagram & Facebook)
               </h2>
             </div>
             <p className="text-xs text-slate-500 mt-1">
-              Daftar target akun publik Instagram yang dipantau crawler MBG secara berkala.
+              Kelola daftar akun publik Instagram dan Facebook Fanspage yang dipantau crawler MBG secara terpadu.
             </p>
           </div>
 
@@ -206,19 +267,19 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
               type="button"
               onClick={handleResetToDefault}
               className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs"
-              title="Kembalikan ke Akun Instagram Default"
+              title="Kembalikan ke Akun Default"
             >
               <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
-              <span>Reset ke 8 Media Default</span>
+              <span>Reset Default (12 Media)</span>
             </button>
 
             <button
               type="button"
-              onClick={() => setShowAddForm(!showAddForm)}
+              onClick={() => openAddModal()}
               className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3.5 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs"
             >
               <Plus className="w-4 h-4" />
-              <span>{showAddForm ? 'Tutup Form' : 'Tambah Akun Instagram'}</span>
+              <span>Tambah Target Akun</span>
             </button>
           </div>
         </div>
@@ -226,10 +287,10 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pb-2">
           <div>
             <h3 className="text-sm font-bold text-slate-900">
-              Daftar Target Akun Instagram Terpantau
+              Daftar Target Akun & Fanspage Terpadu (Instagram & Facebook)
             </h3>
             <p className="text-xs text-slate-500 mt-0.5">
-              Kelola daftar akun media publik Instagram yang menjadi sasaran pantauan crawler sentimen MBG.
+              Kelola seluruh akun Instagram dan Fanspage Facebook sasaran crawler dalam satu tabel terpusat.
             </p>
           </div>
           <div className="flex items-center gap-2 self-start sm:self-auto">
@@ -237,28 +298,28 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
               type="button"
               onClick={handleResetToDefault}
               className="flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 text-xs font-semibold px-2.5 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs"
-              title="Kembalikan ke Akun Instagram Default"
+              title="Kembalikan ke Akun Default"
             >
               <RotateCcw className="w-3.5 h-3.5 text-slate-500" />
               <span>Reset Default</span>
             </button>
             <button
               type="button"
-              onClick={() => setShowAddForm(!showAddForm)}
+              onClick={() => openAddModal()}
               className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition-colors cursor-pointer shadow-xs"
             >
               <Plus className="w-3.5 h-3.5" />
-              <span>{showAddForm ? 'Tutup Form' : 'Tambah Akun'}</span>
+              <span>Tambah Target Akun</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Info Notice: Alasan Khusus Instagram */}
+      {/* Info Notice: Penjelasan Crawler Publik IG & FB */}
       <div className="p-3.5 bg-blue-50/70 border border-blue-200/80 rounded-lg text-xs text-blue-900 flex items-start gap-2.5">
         <Info className="w-4 h-4 text-blue-600 shrink-0 mt-0.5" />
         <div className="leading-relaxed">
-          <span className="font-bold">Fokus Tabel Khusus Target Instagram:</span> Tabel pemantauan akun ini dikhususkan untuk platform <strong>Instagram</strong>. Platform <strong>YouTube</strong> tidak memerlukan daftar akun karena sistem mencari konten secara <strong>global</strong> menggunakan pencarian kata kunci MBG (YouTube Data API v3). Sedangkan platform <strong>TikTok & Facebook</strong> ditiadakan sementara dan belum diaktifkan.
+          <span className="font-bold">Manajemen Akun Terpadu:</span> Daftar ini memadukan akun publik <strong>Instagram</strong> dan fanspage <strong>Facebook</strong>. Crawler menyerap postingan publik seputar program MBG secara otomatis tanpa memerlukan kredensial login.
         </div>
       </div>
 
@@ -283,12 +344,12 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
       {/* KPI Overview Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         <div className="bg-white rounded-lg p-3.5 border border-slate-200 shadow-xs flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-fuchsia-50 text-fuchsia-600 flex items-center justify-center shrink-0">
-            <FontAwesomeIcon icon={faInstagram} className="text-base" />
+          <div className="w-9 h-9 rounded-lg bg-slate-100 text-slate-700 flex items-center justify-center shrink-0">
+            <Radio className="w-4.5 h-4.5" />
           </div>
           <div>
-            <span className="text-[11px] font-medium text-slate-500 block">Total Akun IG</span>
-            <span className="text-lg font-bold text-slate-900">{stats.total} Akun</span>
+            <span className="text-[11px] font-medium text-slate-500 block">Total Target Akun</span>
+            <span className="text-lg font-bold text-slate-900">{stats.total} Sasaran</span>
           </div>
         </div>
 
@@ -301,225 +362,138 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
             <div className="flex items-center gap-1.5">
               <span className="text-base font-bold text-emerald-700">{stats.activeCount} Aktif</span>
               <span className="text-xs text-slate-300 font-bold">/</span>
-              <span className="text-xs font-semibold text-slate-500">{stats.inactiveCount} Tidak Aktif</span>
+              <span className="text-xs font-semibold text-slate-500">{stats.inactiveCount} Nonaktif</span>
             </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg p-3.5 border border-slate-200 shadow-xs flex items-center gap-3">
+          <div className="w-9 h-9 rounded-lg bg-fuchsia-50 text-fuchsia-600 flex items-center justify-center shrink-0">
+            <FontAwesomeIcon icon={faInstagram} className="text-base" />
+          </div>
+          <div>
+            <span className="text-[11px] font-medium text-slate-500 block">Platform Instagram</span>
+            <span className="text-lg font-bold text-fuchsia-700">{stats.igCount} Akun</span>
           </div>
         </div>
 
         <div className="bg-white rounded-lg p-3.5 border border-slate-200 shadow-xs flex items-center gap-3">
           <div className="w-9 h-9 rounded-lg bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-            <Radio className="w-4.5 h-4.5" />
+            <FontAwesomeIcon icon={faFacebook} className="text-base" />
           </div>
           <div>
-            <span className="text-[11px] font-medium text-slate-500 block">Media Berita Utama</span>
-            <span className="text-lg font-bold text-blue-700">{stats.nationalMedia} Media</span>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg p-3.5 border border-slate-200 shadow-xs flex items-center gap-3">
-          <div className="w-9 h-9 rounded-lg bg-violet-50 text-violet-600 flex items-center justify-center shrink-0">
-            <FileText className="w-4.5 h-4.5" />
-          </div>
-          <div>
-            <span className="text-[11px] font-medium text-slate-500 block">Konten Terdeteksi</span>
-            <span className="text-lg font-bold text-violet-700">{stats.totalPosts} Konten</span>
+            <span className="text-[11px] font-medium text-slate-500 block">Platform Facebook</span>
+            <span className="text-lg font-bold text-blue-700">{stats.fbCount} Fanspage</span>
           </div>
         </div>
       </div>
 
-      {/* Quick Add Form Panel */}
-      {showAddForm && (
-        <div className="bg-white rounded-lg p-5 border-2 border-blue-500/80 shadow-md space-y-4 animate-in fade-in">
-          <div className="border-b border-slate-100 pb-2 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FontAwesomeIcon icon={faInstagram} className="text-fuchsia-600 text-sm" />
-              <h3 className="text-sm font-bold text-slate-900">
-                Tambah Target Akun Instagram Baru
-              </h3>
-            </div>
-            <span className="text-xs text-slate-400">
-              Media berita nasional, portal daerah, atau instansi resmi pemerintah di Instagram.
-            </span>
+      {/* Filter & Search Bar */}
+      <div className="bg-white rounded-lg p-3.5 border border-slate-200 shadow-xs space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          {/* Platform Selector Tabs */}
+          <div className="flex items-center gap-1 bg-slate-100/90 p-1 rounded-lg">
+            <button
+              type="button"
+              onClick={() => setSelectedPlatform('semua')}
+              className={`text-xs px-3 py-1.5 rounded-md font-semibold transition-colors cursor-pointer shrink-0 ${
+                selectedPlatform === 'semua'
+                  ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Semua Platform ({stats.total})
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedPlatform('Instagram')}
+              className={`text-xs px-3 py-1.5 rounded-md font-semibold transition-colors cursor-pointer shrink-0 flex items-center gap-1.5 ${
+                selectedPlatform === 'Instagram'
+                  ? 'bg-fuchsia-600 text-white shadow-xs'
+                  : 'text-fuchsia-700 hover:text-fuchsia-900 hover:bg-fuchsia-50'
+              }`}
+            >
+              <FontAwesomeIcon icon={faInstagram} className="text-xs" />
+              <span>Instagram ({stats.igCount})</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedPlatform('Facebook')}
+              className={`text-xs px-3 py-1.5 rounded-md font-semibold transition-colors cursor-pointer shrink-0 flex items-center gap-1.5 ${
+                selectedPlatform === 'Facebook'
+                  ? 'bg-blue-600 text-white shadow-xs'
+                  : 'text-blue-700 hover:text-blue-900 hover:bg-blue-50'
+              }`}
+            >
+              <FontAwesomeIcon icon={faFacebook} className="text-xs" />
+              <span>Facebook ({stats.fbCount})</span>
+            </button>
           </div>
 
-          <form onSubmit={handleAddSource} className="space-y-4">
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-              <div>
-                <label className="text-[11px] font-semibold text-slate-700 block mb-1">
-                  Username Instagram
-                </label>
-                <div className="relative">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Contoh: @kemdikbud.ri"
-                    value={newHandle}
-                    onChange={(e) => setNewHandle(e.target.value)}
-                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                  />
-                </div>
-              </div>
-
-              <div>
-                <label className="text-[11px] font-semibold text-slate-700 block mb-1">
-                  Nama Tampilan
-                </label>
-                <input
-                  type="text"
-                  placeholder="Contoh: Kemdikbud RI Resmi"
-                  value={newName}
-                  onChange={(e) => setNewName(e.target.value)}
-                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-semibold text-slate-700 block mb-1">
-                  Kategori
-                </label>
-                <input
-                  type="text"
-                  placeholder="Contoh: Instansi Pemerintah"
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                  className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-                />
-              </div>
-
-              <div>
-                <label className="text-[11px] font-semibold text-slate-700 block mb-1.5">
-                  Status Pantauan Awal
-                </label>
-                <div className="flex items-center gap-2.5 pt-0.5">
-                  <button
-                    type="button"
-                    role="switch"
-                    aria-checked={newIsActive}
-                    onClick={() => setNewIsActive(!newIsActive)}
-                    className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${
-                      newIsActive ? 'bg-emerald-600' : 'bg-slate-300'
-                    }`}
-                  >
-                    <span
-                      aria-hidden="true"
-                      className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                        newIsActive ? 'translate-x-5' : 'translate-x-0'
-                      }`}
-                    />
-                  </button>
-                  <span
-                    onClick={() => setNewIsActive(!newIsActive)}
-                    className={`text-xs font-semibold cursor-pointer select-none ${
-                      newIsActive ? 'text-emerald-700' : 'text-slate-500'
-                    }`}
-                  >
-                    {newIsActive ? 'Aktif (Dipantau)' : 'Tidak Aktif (Dijeda)'}
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div>
-              <label className="text-[11px] font-semibold text-slate-700 block mb-1">
-                URL Profil Instagram (Opsional, terisi otomatis)
-              </label>
-              <input
-                type="url"
-                placeholder="https://www.instagram.com/kemdikbud.ri/"
-                value={newProfileUrl}
-                onChange={(e) => setNewProfileUrl(e.target.value)}
-                className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
-              />
-            </div>
-
-            <div className="flex items-center justify-end gap-2 pt-2">
-              <button
-                type="button"
-                onClick={() => setShowAddForm(false)}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
-              >
-                Batal
-              </button>
-              <button
-                type="submit"
-                className="px-4 py-2 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors cursor-pointer shadow-xs"
-              >
-                Simpan Target Instagram
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* Filter Status & Search Bar */}
-      <div className="bg-white rounded-lg p-3.5 border border-slate-200 shadow-xs flex flex-wrap items-center justify-between gap-3">
-        {/* Status Filter */}
-        <div className="flex items-center gap-1 bg-slate-100/80 p-1 rounded-lg">
-          <button
-            type="button"
-            onClick={() => setSelectedStatus('semua')}
-            className={`text-xs px-2.5 py-1.5 rounded-md font-semibold transition-colors cursor-pointer shrink-0 ${
-              selectedStatus === 'semua'
-                ? 'bg-white text-slate-900 shadow-xs border border-slate-200/80'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            Semua Akun ({stats.total})
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedStatus('aktif')}
-            className={`text-xs px-2.5 py-1.5 rounded-md font-semibold transition-colors cursor-pointer shrink-0 flex items-center gap-1.5 ${
-              selectedStatus === 'aktif'
-                ? 'bg-emerald-600 text-white shadow-xs'
-                : 'text-emerald-700 hover:text-emerald-900 hover:bg-emerald-50/60'
-            }`}
-          >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                selectedStatus === 'aktif' ? 'bg-white' : 'bg-emerald-500'
-              }`}
+          {/* Search Input */}
+          <div className="relative w-full sm:w-72">
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+            <input
+              type="text"
+              placeholder="Cari akun, fanspage, atau kategori..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
             />
-            Aktif ({stats.activeCount})
-          </button>
-          <button
-            type="button"
-            onClick={() => setSelectedStatus('nonaktif')}
-            className={`text-xs px-2.5 py-1.5 rounded-md font-semibold transition-colors cursor-pointer shrink-0 flex items-center gap-1.5 ${
-              selectedStatus === 'nonaktif'
-                ? 'bg-slate-700 text-white shadow-xs'
-                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
-            }`}
-          >
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${
-                selectedStatus === 'nonaktif' ? 'bg-white' : 'bg-slate-400'
-              }`}
-            />
-            Tidak Aktif ({stats.inactiveCount})
-          </button>
+          </div>
         </div>
 
-        {/* Search */}
-        <div className="relative w-full sm:w-72">
-          <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Cari username @ atau kategori..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500"
-          />
+        {/* Sub-Filter: Status Pantauan (Semua, Aktif, Nonaktif) */}
+        <div className="flex items-center gap-2 pt-1 text-xs border-t border-slate-100">
+          <span className="text-slate-400 text-[11px] font-medium">Status Pantauan:</span>
+          <div className="flex items-center gap-1">
+            <button
+              type="button"
+              onClick={() => setSelectedStatus('semua')}
+              className={`px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer transition-colors ${
+                selectedStatus === 'semua'
+                  ? 'bg-slate-800 text-white'
+                  : 'text-slate-600 hover:bg-slate-100'
+              }`}
+            >
+              Semua
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedStatus('aktif')}
+              className={`px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer transition-colors flex items-center gap-1 ${
+                selectedStatus === 'aktif'
+                  ? 'bg-emerald-600 text-white'
+                  : 'text-emerald-700 hover:bg-emerald-50'
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              Aktif ({stats.activeCount})
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelectedStatus('nonaktif')}
+              className={`px-2 py-0.5 rounded text-[11px] font-semibold cursor-pointer transition-colors flex items-center gap-1 ${
+                selectedStatus === 'nonaktif'
+                  ? 'bg-slate-700 text-white'
+                  : 'text-slate-500 hover:bg-slate-100'
+              }`}
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-slate-400" />
+              Nonaktif ({stats.inactiveCount})
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Main Table of Monitored Sources */}
+      {/* Main Unified Table of Target Accounts */}
       <div className="bg-white rounded-lg border border-slate-200 shadow-xs overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 text-slate-600 border-b border-slate-200 font-semibold text-[11px] uppercase tracking-wider">
               <tr>
-                <th className="py-3 px-4">Target Akun Instagram</th>
+                <th className="py-3 px-4">Target Akun / Fanspage</th>
+                <th className="py-3 px-3">Platform</th>
                 <th className="py-3 px-3">Kategori Media</th>
                 <th className="py-3 px-3">Status Pantauan</th>
                 <th className="py-3 px-3 text-center">Konten Terdeteksi</th>
@@ -528,143 +502,175 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100 text-slate-700">
-              {filteredSources.map((item) => (
-                <tr
-                  key={item.id}
-                  className={`transition-colors ${
-                    item.isActive
-                      ? 'hover:bg-slate-50/70'
-                      : 'bg-slate-50/40 hover:bg-slate-50 text-slate-600'
-                  }`}
-                >
-                  {/* Akun / Handle */}
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-2.5">
-                      <div
-                        className={`w-8 h-8 rounded-lg border flex items-center justify-center font-bold text-xs shrink-0 ${
-                          item.isActive
-                            ? 'bg-fuchsia-50 border-fuchsia-200 text-fuchsia-700'
-                            : 'bg-slate-100/60 border-slate-200 text-slate-400'
-                        }`}
-                      >
-                        <FontAwesomeIcon icon={faInstagram} className="text-sm" />
-                      </div>
-                      <div>
-                        <div className="font-bold text-slate-900 flex items-center gap-1.5">
-                          <span>{item.handle}</span>
-                          {item.isDefault && (
-                            <span className="text-[9.5px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 py-0.2 rounded">
-                              Default
-                            </span>
-                          )}
-                        </div>
-                        <span className="text-[11px] text-slate-500 block">
-                          {item.name}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-
-                  {/* Kategori */}
-                  <td className="py-3 px-3">
-                    <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-medium border border-slate-200">
-                      {item.category}
-                    </span>
-                  </td>
-
-                  {/* Status Pantauan: Interactive Toggle switch + Badge */}
-                  <td className="py-3 px-3">
-                    <button
-                      type="button"
-                      role="switch"
-                      aria-checked={item.isActive}
-                      onClick={() => handleToggleActive(item.id)}
-                      className="group inline-flex items-center gap-2 cursor-pointer select-none text-left p-1 rounded-md hover:bg-slate-100/70 transition-colors focus:outline-none"
-                      title={
-                        item.isActive
-                          ? 'Status: Aktif. Klik saklar untuk mengubah ke Tidak Aktif'
-                          : 'Status: Tidak Aktif. Klik saklar untuk mengubah ke Aktif'
-                      }
-                    >
-                      {/* Toggle Track */}
-                      <div
-                        className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
-                          item.isActive ? 'bg-emerald-600' : 'bg-slate-300'
-                        }`}
-                      >
-                        <span
-                          aria-hidden="true"
-                          className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
-                            item.isActive ? 'translate-x-4' : 'translate-x-0'
+              {filteredSources.map((item) => {
+                const isIg = item.platform === 'Instagram'
+                return (
+                  <tr
+                    key={item.id}
+                    className={`transition-colors ${
+                      item.isActive
+                        ? 'hover:bg-slate-50/70'
+                        : 'bg-slate-50/40 hover:bg-slate-50 text-slate-500'
+                    }`}
+                  >
+                    {/* Akun / Fanspage Handle & Name */}
+                    <td className="py-3 px-4">
+                      <div className="flex items-center gap-2.5">
+                        <div
+                          className={`w-8 h-8 rounded-lg border flex items-center justify-center font-bold text-xs shrink-0 ${
+                            isIg
+                              ? item.isActive
+                                ? 'bg-fuchsia-50 border-fuchsia-200 text-fuchsia-700'
+                                : 'bg-slate-100/60 border-slate-200 text-slate-400'
+                              : item.isActive
+                              ? 'bg-blue-50 border-blue-200 text-blue-700'
+                              : 'bg-slate-100/60 border-slate-200 text-slate-400'
                           }`}
-                        />
-                      </div>
-
-                      {/* Status Badge */}
-                      <span
-                        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${
-                          item.isActive
-                            ? 'bg-emerald-50 text-emerald-700 border-emerald-200 group-hover:bg-emerald-100/70'
-                            : 'bg-slate-100 text-slate-600 border-slate-200 group-hover:bg-slate-200/70'
-                        }`}
-                      >
-                        <span
-                          className={`w-1.5 h-1.5 rounded-full ${
-                            item.isActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
-                          }`}
-                        />
-                        {item.isActive ? 'Aktif' : 'Tidak Aktif'}
-                      </span>
-                    </button>
-                  </td>
-
-                  {/* Konten Terdeteksi */}
-                  <td className="py-3 px-3 text-center">
-                    <span className="font-bold text-slate-900 bg-slate-50 px-2 py-1 rounded border border-slate-200 text-xs">
-                      {item.postsCount} konten
-                    </span>
-                  </td>
-
-                  {/* Terakhir Diperiksa */}
-                  <td className="py-3 px-3 text-slate-500 text-[11px]">
-                    <div className="flex items-center gap-1">
-                      <RefreshCw className="w-3 h-3 text-slate-400" />
-                      <span>{item.lastChecked}</span>
-                    </div>
-                  </td>
-
-                  {/* Aksi */}
-                  <td className="py-3 px-4 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      {item.profileUrl && item.profileUrl !== '#' && (
-                        <a
-                          href={item.profileUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="p-1.5 text-slate-400 hover:text-fuchsia-600 hover:bg-fuchsia-50 rounded transition-colors"
-                          title="Buka Profil Instagram"
                         >
-                          <ExternalLink className="w-3.5 h-3.5" />
-                        </a>
-                      )}
+                          <FontAwesomeIcon icon={isIg ? faInstagram : faFacebook} className="text-sm" />
+                        </div>
+                        <div>
+                          <div className="font-bold text-slate-900 flex items-center gap-1.5">
+                            <span>{item.handle}</span>
+                            {item.isDefault && (
+                              <span className="text-[9.5px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1 py-0.2 rounded">
+                                Default
+                              </span>
+                            )}
+                          </div>
+                          <span className="text-[11px] text-slate-500 block truncate max-w-xs">
+                            {item.name}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
 
+                    {/* Platform Badge */}
+                    <td className="py-3 px-3">
+                      <span
+                        className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-semibold border ${
+                          isIg
+                            ? 'bg-fuchsia-50 text-fuchsia-800 border-fuchsia-200'
+                            : 'bg-blue-50 text-blue-800 border-blue-200'
+                        }`}
+                      >
+                        <FontAwesomeIcon icon={isIg ? faInstagram : faFacebook} className="text-[10px]" />
+                        {item.platform}
+                      </span>
+                    </td>
+
+                    {/* Kategori */}
+                    <td className="py-3 px-3">
+                      <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded text-[11px] font-medium border border-slate-200 block truncate max-w-xs">
+                        {item.category}
+                      </span>
+                    </td>
+
+                    {/* Status Pantauan: Interactive Switch + Badge */}
+                    <td className="py-3 px-3">
                       <button
                         type="button"
-                        onClick={() => handleDeleteSource(item.id, item.handle)}
-                        className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"
-                        title="Hapus Akun"
+                        role="switch"
+                        aria-checked={item.isActive}
+                        onClick={() => handleToggleActive(item.id)}
+                        className="group inline-flex items-center gap-2 cursor-pointer select-none text-left p-1 rounded-md hover:bg-slate-100/70 transition-colors focus:outline-none"
+                        title={
+                          item.isActive
+                            ? 'Status: Aktif. Klik untuk jeda pantauan'
+                            : 'Status: Tidak Aktif. Klik untuk aktifkan pantauan'
+                        }
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <div
+                          className={`relative inline-flex h-5 w-9 shrink-0 rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out ${
+                            item.isActive ? 'bg-emerald-600' : 'bg-slate-300'
+                          }`}
+                        >
+                          <span
+                            aria-hidden="true"
+                            className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow-sm ring-0 transition duration-200 ease-in-out ${
+                              item.isActive ? 'translate-x-4' : 'translate-x-0'
+                            }`}
+                          />
+                        </div>
+
+                        <span
+                          className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-bold border transition-colors ${
+                            item.isActive
+                              ? 'bg-emerald-50 text-emerald-700 border-emerald-200 group-hover:bg-emerald-100/70'
+                              : 'bg-slate-100 text-slate-600 border-slate-200 group-hover:bg-slate-200/70'
+                          }`}
+                        >
+                          <span
+                            className={`w-1.5 h-1.5 rounded-full ${
+                              item.isActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'
+                            }`}
+                          />
+                          {item.isActive ? 'Aktif' : 'Tidak Aktif'}
+                        </span>
                       </button>
-                    </div>
-                  </td>
-                </tr>
-              ))}
+                    </td>
+
+                    {/* Konten Terdeteksi */}
+                    <td className="py-3 px-3 text-center">
+                      <span className="font-bold text-slate-900 bg-slate-50 px-2 py-1 rounded border border-slate-200 text-xs">
+                        {item.postsCount} konten
+                      </span>
+                    </td>
+
+                    {/* Terakhir Diperiksa */}
+                    <td className="py-3 px-3 text-slate-500 text-[11px]">
+                      <div className="flex items-center gap-1">
+                        <RefreshCw className="w-3 h-3 text-slate-400" />
+                        <span>{item.lastChecked}</span>
+                      </div>
+                    </td>
+
+                    {/* Aksi: Edit, Open Link, Delete */}
+                    <td className="py-3 px-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        <button
+                          type="button"
+                          onClick={() => openEditModal(item)}
+                          className="p-1.5 text-slate-500 hover:text-blue-600 hover:bg-blue-50 rounded transition-colors cursor-pointer"
+                          title="Edit Target Akun"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+
+                        {item.profileUrl && item.profileUrl !== '#' && (
+                          <a
+                            href={item.profileUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`p-1.5 text-slate-400 rounded transition-colors ${
+                              isIg
+                                ? 'hover:text-fuchsia-600 hover:bg-fuchsia-50'
+                                : 'hover:text-blue-600 hover:bg-blue-50'
+                            }`}
+                            title={`Buka Halaman ${item.platform}`}
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        )}
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSource(item.id, item.handle, item.platform)}
+                          className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded transition-colors cursor-pointer"
+                          title="Hapus Akun"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                )
+              })}
 
               {filteredSources.length === 0 && (
                 <tr>
-                  <td colSpan={6} className="py-10 text-center text-slate-400 text-xs">
-                    Tidak ditemukan target akun Instagram yang cocok dengan filter atau kata kunci pencarian.
+                  <td colSpan={7} className="py-10 text-center text-slate-400 text-xs">
+                    Tidak ditemukan target akun yang cocok dengan filter atau kata kunci pencarian.
                   </td>
                 </tr>
               )}
@@ -672,6 +678,253 @@ export const SourcesPage: React.FC<SourcesPageProps> = ({ embedded = false }) =>
           </table>
         </div>
       </div>
+
+      {/* MODAL: TAMBAH & EDIT TARGET AKUN (IG / FB) */}
+      {isModalOpen && (
+        <div className="fixed inset-0 bg-slate-900/50 backdrop-blur-xs z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+            {/* Modal Header */}
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+              <div>
+                <h3 className="text-sm font-bold text-slate-900">
+                  {editingItem ? 'Edit Target Pantauan' : 'Tambah Target Akun Media'}
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  {editingItem
+                    ? `Perbarui data pantauan untuk ${editingItem.handle}`
+                    : 'Pilih platform (Instagram / Facebook) dan lengkapi rincian akun.'}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={closeModal}
+                className="text-slate-400 hover:text-slate-600 p-1.5 rounded-lg hover:bg-slate-200/60 transition-colors cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Modal Form */}
+            <form onSubmit={handleModalSubmit} className="p-5 space-y-4">
+              {/* Step 1: Pilih Platform Terlebih Dahulu */}
+              <div>
+                <label className="text-[11px] font-bold text-slate-700 block mb-1.5 uppercase tracking-wider">
+                  1. Pilih Platform Media Sosial:
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setFormPlatform('Instagram')}
+                    className={`p-3 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-3 ${
+                      formPlatform === 'Instagram'
+                        ? 'bg-fuchsia-50 border-fuchsia-300 ring-2 ring-fuchsia-400/30'
+                        : 'bg-white border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div
+                      className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                        formPlatform === 'Instagram'
+                          ? 'bg-fuchsia-600 text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      <FontAwesomeIcon icon={faInstagram} className="text-base" />
+                    </div>
+                    <div className="min-w-0">
+                      <span
+                        className={`text-xs font-bold block ${
+                          formPlatform === 'Instagram' ? 'text-fuchsia-900' : 'text-slate-800'
+                        }`}
+                      >
+                        Instagram
+                      </span>
+                      <span className="text-[10px] text-slate-500 block truncate">
+                        Crawler Open Graph Publik
+                      </span>
+                    </div>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => setFormPlatform('Facebook')}
+                    className={`p-3 rounded-lg border text-left transition-all cursor-pointer flex items-center gap-3 ${
+                      formPlatform === 'Facebook'
+                        ? 'bg-blue-50 border-blue-300 ring-2 ring-blue-400/30'
+                        : 'bg-white border-slate-200 hover:bg-slate-50'
+                    }`}
+                  >
+                    <div
+                      className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 ${
+                        formPlatform === 'Facebook'
+                          ? 'bg-blue-600 text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-600'
+                      }`}
+                    >
+                      <FontAwesomeIcon icon={faFacebook} className="text-base" />
+                    </div>
+                    <div className="min-w-0">
+                      <span
+                        className={`text-xs font-bold block ${
+                          formPlatform === 'Facebook' ? 'text-blue-900' : 'text-slate-800'
+                        }`}
+                      >
+                        Facebook
+                      </span>
+                      <span className="text-[10px] text-slate-500 block truncate">
+                        Crawler Fanspage Publik
+                      </span>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {/* Step 2: Form Fields Sesuai Platform yang Dipilih */}
+              <div className="space-y-3 pt-2 border-t border-slate-100">
+                <label className="text-[11px] font-bold text-slate-700 block uppercase tracking-wider">
+                  2. Informasi Akun {formPlatform}:
+                </label>
+
+                {/* Handle / Username Input */}
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 block mb-1">
+                    {formPlatform === 'Instagram'
+                      ? 'Username / Handle Instagram *'
+                      : 'Nama Fanspage / ID Halaman Facebook *'}
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder={
+                      formPlatform === 'Instagram'
+                        ? 'Contoh: @kompascom atau narasinewsroom'
+                        : 'Contoh: Kompas.com atau CNNIndonesia'
+                    }
+                    value={formHandle}
+                    onChange={(e) => setFormHandle(e.target.value)}
+                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    {formPlatform === 'Instagram'
+                      ? 'Otomatis diformat dengan awalan @.'
+                      : 'Masukkan nama resmi fanspage publik Facebook.'}
+                  </p>
+                </div>
+
+                {/* Nama Tampilan Media */}
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 block mb-1">
+                    Nama Tampilan / Nama Media *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    placeholder={
+                      formPlatform === 'Instagram'
+                        ? 'Contoh: Kompas.com'
+                        : 'Contoh: Kompas.com Fanspage'
+                    }
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+
+                {/* Kategori Media */}
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 block mb-1">
+                    Kategori / Label Sasaran
+                  </label>
+                  <input
+                    type="text"
+                    placeholder={
+                      formPlatform === 'Instagram'
+                        ? 'Contoh: Media Berita Nasional / Jurnalisme Investigasi'
+                        : 'Contoh: Portal Berita Digital / Fanspage Resmi Pemerintah'
+                    }
+                    value={formCategory}
+                    onChange={(e) => setFormCategory(e.target.value)}
+                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                </div>
+
+                {/* URL Profil / Halaman */}
+                <div>
+                  <label className="text-[11px] font-semibold text-slate-700 block mb-1">
+                    {formPlatform === 'Instagram'
+                      ? 'URL Profil Instagram (Opsional)'
+                      : 'URL Halaman Facebook (Opsional)'}
+                  </label>
+                  <input
+                    type="url"
+                    placeholder={
+                      formPlatform === 'Instagram'
+                        ? 'https://www.instagram.com/kompascom/'
+                        : 'https://www.facebook.com/kompascom'
+                    }
+                    value={formProfileUrl}
+                    onChange={(e) => setFormProfileUrl(e.target.value)}
+                    className="w-full text-xs bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                  />
+                  <p className="text-[10px] text-slate-400 mt-1">
+                    Dibiarkan kosong akan di-generate otomatis dari handle.
+                  </p>
+                </div>
+
+                {/* Status Pantauan */}
+                <div className="pt-2">
+                  <label className="text-[11px] font-semibold text-slate-700 block mb-1.5">
+                    Status Pemantauan Crawler
+                  </label>
+                  <div className="flex items-center gap-2.5">
+                    <button
+                      type="button"
+                      role="switch"
+                      aria-checked={formIsActive}
+                      onClick={() => setFormIsActive(!formIsActive)}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500/40 ${
+                        formIsActive ? 'bg-emerald-600' : 'bg-slate-300'
+                      }`}
+                    >
+                      <span
+                        aria-hidden="true"
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                          formIsActive ? 'translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                    <span
+                      onClick={() => setFormIsActive(!formIsActive)}
+                      className={`text-xs font-semibold cursor-pointer select-none ${
+                        formIsActive ? 'text-emerald-700' : 'text-slate-500'
+                      }`}
+                    >
+                      {formIsActive ? 'Aktif (Dipantau oleh crawler)' : 'Tidak Aktif (Dijeda sementara)'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Modal Footer */}
+              <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={closeModal}
+                  className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition-colors cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 text-xs font-semibold bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors cursor-pointer shadow-xs flex items-center gap-1.5"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>{editingItem ? 'Simpan Perubahan' : 'Simpan Target Akun'}</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
