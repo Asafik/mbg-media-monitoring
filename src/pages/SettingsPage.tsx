@@ -122,13 +122,13 @@ const INITIAL_COLLECTORS: CollectorItem[] = [
   },
   {
     platform: 'TikTok',
-    mode: 'TikTok Creative & Search API',
-    status: 'Connected',
+    mode: 'Public Tag & Video Scraper (Tanpa API & Login)',
+    status: 'Active (Tanpa API)',
     statusColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
-    lastSync: '25 menit lalu',
-    itemsFound: '34 video',
-    latency: '142 ms',
-    quotaUsed: '18% dari kuota harian',
+    lastSync: 'Baru saja (Scraper Aktif)',
+    itemsFound: '5 video publik MBG',
+    latency: '118 ms',
+    quotaUsed: 'Tanpa Batas (Bebas Kuota/Login)',
     errorCount: 0,
   },
   {
@@ -495,7 +495,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                 ...c,
                 latency: `${delay} ms`,
                 lastSync: `Ping Sukses (${nowStr})`,
-                status: platformName === 'TikTok' ? 'Connected' : 'Active (Tanpa API)',
+                status: 'Active (Tanpa API)',
                 statusColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
               }
             }
@@ -546,7 +546,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             ...c,
             latency: `${rndLatency} ms`,
             lastSync: `Ping Sukses (${nowStr})`,
-            status: c.platform === 'TikTok' ? 'Connected' : 'Active (Tanpa API)',
+            status: 'Active (Tanpa API)',
             statusColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
           }
         })
@@ -767,20 +767,20 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                 </span>
               </div>
 
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+              <div className="p-3 bg-slate-900/5 border border-slate-200 rounded-lg">
                 <div className="flex items-center gap-2">
                   {renderPlatformIcon('TikTok', 'md')}
                   <div>
                     <span className="font-bold text-slate-900 block leading-tight">
-                      TikTok API
+                      TikTok Scraper
                     </span>
-                    <span className="text-[10px] text-slate-600 font-bold uppercase tracking-wider">
-                      Creative / Crawler
+                    <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">
+                      Tanpa API & Login
                     </span>
                   </div>
                 </div>
-                <span className="text-[10px] text-slate-500 block mt-2">
-                  Pencarian tagar & video publik seputar isu MBG.
+                <span className="text-[10px] text-slate-600 block mt-2">
+                  Pencarian tagar & video publik isu MBG, bebas kuota dan tanpa login.
                 </span>
               </div>
             </div>
@@ -1172,7 +1172,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             </div>
 
             <p className="text-xs text-slate-500">
-              Membersihkan seluruh data cache yang tersimpan di <strong>LocalStorage browser</strong> (hasil fetch live YouTube/IG/FB, komentar tersimpan, pengaturan sumber & akun) agar semua halaman kembali bersih.
+              Membersihkan seluruh data cache yang tersimpan di <strong>LocalStorage browser</strong> (hasil fetch live YouTube/IG/FB/TikTok, komentar tersimpan, pengaturan sumber & akun) agar semua halaman kembali bersih.
             </p>
 
             <div className="grid grid-cols-3 gap-2 pt-1">
