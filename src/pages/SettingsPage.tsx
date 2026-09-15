@@ -34,6 +34,14 @@ import {
   validateYouTubeApiKey,
   DEFAULT_YOUTUBE_API_KEY,
 } from '../services/apiKeyService'
+import {
+  getMonitoredKeywords,
+  addMonitoredKeyword,
+  removeMonitoredKeyword,
+  resetMonitoredKeywords,
+  DEFAULT_PRIMARY_KEYWORDS,
+  DEFAULT_ISSUE_KEYWORDS,
+} from '../services/keywordsService'
 
 export type SettingsTab = 'koneksi' | 'akun' | 'keyword' | 'lainnya'
 
@@ -87,22 +95,6 @@ export const renderPlatformIcon = (platform: string, size: 'sm' | 'md' = 'sm') =
 
 
 
-const DEFAULT_PRIMARY_KEYWORDS = [
-  'MBG',
-  'Makan Bergizi Gratis',
-  'Dapur SPPG',
-  'Satuan Pelayanan Pangan Gizi',
-]
-
-const DEFAULT_ISSUE_KEYWORDS = [
-  'keracunan',
-  'basi',
-  'tidak tepat sasaran',
-  'terlambat',
-  'porsi sedikit',
-  'ompreng',
-  'susu sapi',
-]
 
 export interface CollectorItem {
   platform: string
@@ -217,6 +209,16 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
     valid?: boolean
     text: string
   } | null>(null)
+  // Keywords Database State
+  const [isLoadingKeywords, setIsLoadingKeywords] = useState(false)
+  const [isSubmittingPrimary, setIsSubmittingPrimary] = useState(false)
+  const [isSubmittingIssue, setIsSubmittingIssue] = useState(false)
+  const [isResettingKeywords, setIsResettingKeywords] = useState(false)
+  const [keywordMessage, setKeywordMessage] = useState<{
+    success: boolean
+    text: string
+  } | null>(null)
+
   // Muat YouTube API Key dari Supabase saat halaman dibuka
   useEffect(() => {
     let isMounted = true
@@ -227,6 +229,24 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       }
     }
     loadKey()
+    return () => {
+      isMounted = false
+    }
+  }, [])
+
+  // Muat Kata Kunci dari Supabase DB saat halaman dibuka
+  useEffect(() => {
+    let isMounted = true
+    const loadKeywords = async () => {
+      setIsLoadingKeywords(true)
+      const res = await getMonitoredKeywords()
+      if (isMounted) {
+        setPrimaryKeywords(res.primary)
+        setIssueKeywords(res.issue)
+        setIsLoadingKeywords(false)
+      }
+    }
+    loadKeywords()
     return () => {
       isMounted = false
     }
@@ -270,26 +290,123 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
   const [collectorsList, setCollectorsList] = useState<CollectorItem[]>(INITIAL_COLLECTORS)
   const [testingPlatform, setTestingPlatform] = useState<string | null>(null)
 
-  const handleAddPrimary = () => {
-    if (newPrimary.trim() && !primaryKeywords.includes(newPrimary.trim())) {
-      setPrimaryKeywords([...primaryKeywords, newPrimary.trim()])
+  const handleAddPrimary = async () => {
+    const val = newPrimary.trim()
+    if (!val) return
+    if (primaryKeywords.includes(val)) {
+      setKeywordMessage({ success: false, text: `Keyword utama '#${val}' sudah ada dalam daftar.` })
+      setTimeout(() => setKeywordMessage(null), 3500)
+      return
+    }
+
+    setIsSubmittingPrimary(true)
+    const res = await addMonitoredKeyword(val, 'primary')
+    setIsSubmittingPrimary(false)
+
+    if (res.success) {
+      setPrimaryKeywords([...primaryKeywords, val])
       setNewPrimary('')
+      setKeywordMessage({
+        success: true,
+        text: `Keyword utama '#${val}' berhasil ditambahkan ke database!`,
+      })
+    } else {
+      setKeywordMessage({
+        success: false,
+        text: res.error || 'Gagal menambahkan keyword ke database.',
+      })
     }
+    setTimeout(() => setKeywordMessage(null), 4000)
   }
 
-  const handleRemovePrimary = (kw: string) => {
-    setPrimaryKeywords(primaryKeywords.filter((k) => k !== kw))
+  const handleRemovePrimary = async (kw: string) => {
+    const res = await removeMonitoredKeyword(kw, 'primary')
+    if (res.success) {
+      setPrimaryKeywords(primaryKeywords.filter((k) => k !== kw))
+      setKeywordMessage({
+        success: true,
+        text: `Keyword utama '#${kw}' berhasil dihapus dari database.`,
+      })
+    } else {
+      setKeywordMessage({
+        success: false,
+        text: res.error || 'Gagal menghapus keyword dari database.',
+      })
+    }
+    setTimeout(() => setKeywordMessage(null), 4000)
   }
 
-  const handleAddIssue = () => {
-    if (newIssue.trim() && !issueKeywords.includes(newIssue.trim())) {
-      setIssueKeywords([...issueKeywords, newIssue.trim()])
+  const handleAddIssue = async () => {
+    const val = newIssue.trim()
+    if (!val) return
+    if (issueKeywords.includes(val)) {
+      setKeywordMessage({ success: false, text: `Keyword isu '#${val}' sudah ada dalam daftar.` })
+      setTimeout(() => setKeywordMessage(null), 3500)
+      return
+    }
+
+    setIsSubmittingIssue(true)
+    const res = await addMonitoredKeyword(val, 'issue')
+    setIsSubmittingIssue(false)
+
+    if (res.success) {
+      setIssueKeywords([...issueKeywords, val])
       setNewIssue('')
+      setKeywordMessage({
+        success: true,
+        text: `Keyword isu '#${val}' berhasil ditambahkan ke database!`,
+      })
+    } else {
+      setKeywordMessage({
+        success: false,
+        text: res.error || 'Gagal menambahkan keyword isu ke database.',
+      })
     }
+    setTimeout(() => setKeywordMessage(null), 4000)
   }
 
-  const handleRemoveIssue = (kw: string) => {
-    setIssueKeywords(issueKeywords.filter((k) => k !== kw))
+  const handleRemoveIssue = async (kw: string) => {
+    const res = await removeMonitoredKeyword(kw, 'issue')
+    if (res.success) {
+      setIssueKeywords(issueKeywords.filter((k) => k !== kw))
+      setKeywordMessage({
+        success: true,
+        text: `Keyword isu '#${kw}' berhasil dihapus dari database.`,
+      })
+    } else {
+      setKeywordMessage({
+        success: false,
+        text: res.error || 'Gagal menghapus keyword isu dari database.',
+      })
+    }
+    setTimeout(() => setKeywordMessage(null), 4000)
+  }
+
+  const handleResetKeywords = async () => {
+    if (
+      !window.confirm(
+        'Kembalikan seluruh kata kunci ke daftar bawaan awal di database (4 Utama + 7 Isu)?'
+      )
+    ) {
+      return
+    }
+    setIsResettingKeywords(true)
+    const res = await resetMonitoredKeywords()
+    setIsResettingKeywords(false)
+    if (res.success) {
+      setPrimaryKeywords(res.primary)
+      setIssueKeywords(res.issue)
+      setKeywordMessage({
+        success: true,
+        text: 'Seluruh kata kunci berhasil di-reset ke daftar bawaan default di database!',
+      })
+    } else {
+      setKeywordMessage({
+        success: false,
+        text: res.error || 'Gagal mereset kata kunci.',
+      })
+    }
+    setTimeout(() => setKeywordMessage(null), 4000)
   }
 
   const handleSave = () => {
@@ -885,17 +1002,51 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
       {/* SUB-MENU 3: KATA KUNCI */}
       {activeTab === 'keyword' && (
         <div className="bg-white rounded-lg p-5 border border-slate-200 shadow-xs space-y-5 animate-in fade-in duration-200">
-          <div className="border-b border-slate-100 pb-3">
-            <div className="flex items-center gap-2">
-              <Tag className="w-4 h-4 text-blue-600" />
-              <h3 className="text-sm font-bold text-slate-900">
-                Manajemen Kata Kunci Bertingkat (Keyword Contextual Logic)
-              </h3>
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <Tag className="w-4 h-4 text-blue-600" />
+                <h3 className="text-sm font-bold text-slate-900">
+                  Manajemen Kata Kunci Bertingkat
+                </h3>
+                <span className="bg-blue-50 text-blue-700 border border-blue-200 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                  {primaryKeywords.length + issueKeywords.length} Kata Kunci Terhubung DB
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">
+                Keyword isu hanya ditarik jika terdapat keyword utama dalam konten/komentar yang sama untuk menghindari noise berita lain yang tidak berhubungan.
+              </p>
             </div>
-            <p className="text-xs text-slate-500 mt-1">
-              Keyword isu hanya ditarik jika terdapat keyword utama dalam konten/komentar yang sama untuk menghindari noise berita lain yang tidak berhubungan.
-            </p>
+
+            <button
+              type="button"
+              onClick={handleResetKeywords}
+              disabled={isResettingKeywords || isLoadingKeywords}
+              className="self-start sm:self-auto text-xs text-slate-600 hover:text-slate-900 border border-slate-200 bg-white hover:bg-slate-50 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer shadow-2xs disabled:opacity-50"
+              title="Kembalikan kata kunci ke 11 kata kunci bawaan awal"
+            >
+              <RotateCcw className={`w-3.5 h-3.5 text-slate-500 ${isResettingKeywords ? 'animate-spin' : ''}`} />
+              <span>{isResettingKeywords ? 'Mereset...' : 'Reset ke Default'}</span>
+            </button>
           </div>
+
+          {/* Notifikasi Hasil Aksi CRUD Kata Kunci */}
+          {keywordMessage && (
+            <div
+              className={`p-3 rounded-lg text-xs flex items-center gap-2 animate-in fade-in duration-200 shadow-2xs ${
+                keywordMessage.success
+                  ? 'bg-emerald-50 border border-emerald-200 text-emerald-900'
+                  : 'bg-rose-50 border border-rose-200 text-rose-900'
+              }`}
+            >
+              {keywordMessage.success ? (
+                <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+              ) : (
+                <ShieldAlert className="w-4 h-4 text-rose-600 shrink-0" />
+              )}
+              <span className="font-medium">{keywordMessage.text}</span>
+            </div>
+          )}
 
           {/* 3A: Keyword Utama */}
           <div className="space-y-2">
@@ -903,25 +1054,29 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               <span className="text-xs font-bold text-slate-800">
                 1. Keyword Utama (Wajib Ada):
               </span>
-              <span className="text-[11px] text-slate-400">Entitas Subjek MBG</span>
+              <span className="text-[11px] text-slate-400">
+                {primaryKeywords.length} item • Entitas Subjek MBG
+              </span>
             </div>
 
             <div className="flex gap-2">
               <input
                 type="text"
-                placeholder="Tambah keyword utama baru..."
+                placeholder="Tambah keyword utama baru (contoh: 'Badan Gizi Nasional')..."
                 value={newPrimary}
                 onChange={(e) => setNewPrimary(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddPrimary()}
-                className="flex-1 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                disabled={isSubmittingPrimary}
+                className="flex-1 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50"
               />
               <button
                 type="button"
                 onClick={handleAddPrimary}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                disabled={isSubmittingPrimary || !newPrimary.trim()}
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 shadow-2xs"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Tambah</span>
+                <Plus className={`w-3.5 h-3.5 ${isSubmittingPrimary ? 'animate-spin' : ''}`} />
+                <span>{isSubmittingPrimary ? 'Menyimpan...' : 'Tambah'}</span>
               </button>
             </div>
 
@@ -935,7 +1090,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                   <button
                     type="button"
                     onClick={() => handleRemovePrimary(kw)}
-                    className="text-blue-400 hover:text-blue-700 cursor-pointer"
+                    className="text-blue-400 hover:text-blue-700 cursor-pointer p-0.5"
+                    title={`Hapus keyword '#${kw}' dari database`}
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
@@ -950,7 +1106,9 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               <span className="text-xs font-bold text-slate-800">
                 2. Keyword Isu Terkait (Terkait Erat dengan MBG):
               </span>
-              <span className="text-[11px] text-slate-400">Indikator Masalah & Topik</span>
+              <span className="text-[11px] text-slate-400">
+                {issueKeywords.length} item • Indikator Masalah & Topik
+              </span>
             </div>
 
             <div className="flex gap-2">
@@ -960,15 +1118,17 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                 value={newIssue}
                 onChange={(e) => setNewIssue(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && handleAddIssue()}
-                className="flex-1 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20"
+                disabled={isSubmittingIssue}
+                className="flex-1 px-3 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500/20 disabled:opacity-50"
               />
               <button
                 type="button"
                 onClick={handleAddIssue}
-                className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1 transition-colors cursor-pointer"
+                disabled={isSubmittingIssue || !newIssue.trim()}
+                className="bg-slate-800 hover:bg-slate-900 text-white text-xs font-semibold px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition-colors cursor-pointer disabled:opacity-50 shadow-2xs"
               >
-                <Plus className="w-3.5 h-3.5" />
-                <span>Tambah</span>
+                <Plus className={`w-3.5 h-3.5 ${isSubmittingIssue ? 'animate-spin' : ''}`} />
+                <span>{isSubmittingIssue ? 'Menyimpan...' : 'Tambah'}</span>
               </button>
             </div>
 
@@ -982,7 +1142,8 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                   <button
                     type="button"
                     onClick={() => handleRemoveIssue(kw)}
-                    className="text-slate-400 hover:text-rose-600 cursor-pointer"
+                    className="text-slate-400 hover:text-rose-600 cursor-pointer p-0.5"
+                    title={`Hapus keyword isu '#${kw}' dari database`}
                   >
                     <Trash2 className="w-3 h-3" />
                   </button>
