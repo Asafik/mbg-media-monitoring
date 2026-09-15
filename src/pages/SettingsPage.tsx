@@ -20,6 +20,13 @@ import {
   Trash2,
 } from 'lucide-react'
 import React, { useEffect, useState } from 'react'
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
+import {
+  faYoutube,
+  faTiktok,
+  faInstagram,
+  faFacebook,
+} from '@fortawesome/free-brands-svg-icons'
 import { SourcesPage } from './SourcesPage'
 import {
   getApiKey,
@@ -29,6 +36,53 @@ import {
 } from '../services/apiKeyService'
 
 export type SettingsTab = 'koneksi' | 'akun' | 'keyword' | 'lainnya'
+
+export const renderPlatformIcon = (platform: string, size: 'sm' | 'md' = 'sm') => {
+  switch (platform) {
+    case 'YouTube':
+      return (
+        <div
+          className={`${
+            size === 'md' ? 'w-7 h-7' : 'w-5.5 h-5.5'
+          } rounded-md bg-red-50 border border-red-200/80 flex items-center justify-center text-red-600 shrink-0 shadow-2xs`}
+        >
+          <FontAwesomeIcon icon={faYoutube} className={size === 'md' ? 'text-sm' : 'text-xs'} />
+        </div>
+      )
+    case 'TikTok':
+      return (
+        <div
+          className={`${
+            size === 'md' ? 'w-7 h-7' : 'w-5.5 h-5.5'
+          } rounded-md bg-slate-900 border border-slate-800 flex items-center justify-center text-white shrink-0 shadow-2xs`}
+        >
+          <FontAwesomeIcon icon={faTiktok} className={size === 'md' ? 'text-xs' : 'text-[11px]'} />
+        </div>
+      )
+    case 'Instagram':
+      return (
+        <div
+          className={`${
+            size === 'md' ? 'w-7 h-7' : 'w-5.5 h-5.5'
+          } rounded-md bg-gradient-to-tr from-amber-500 via-rose-500 to-purple-600 flex items-center justify-center text-white shrink-0 shadow-2xs`}
+        >
+          <FontAwesomeIcon icon={faInstagram} className={size === 'md' ? 'text-xs' : 'text-[11px]'} />
+        </div>
+      )
+    case 'Facebook':
+      return (
+        <div
+          className={`${
+            size === 'md' ? 'w-7 h-7' : 'w-5.5 h-5.5'
+          } rounded-md bg-blue-600 flex items-center justify-center text-white shrink-0 shadow-2xs`}
+        >
+          <FontAwesomeIcon icon={faFacebook} className={size === 'md' ? 'text-xs' : 'text-[11px]'} />
+        </div>
+      )
+    default:
+      return null
+  }
+}
 
 
 
@@ -554,35 +608,71 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
             {/* Penjelasan Status Kebutuhan API Key per Platform */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2.5 text-xs">
               <div className="p-3 bg-red-50/70 border border-red-200 rounded-lg">
-                <span className="font-bold text-red-900 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-red-500" /> YouTube Data API
+                <div className="flex items-center gap-2">
+                  {renderPlatformIcon('YouTube', 'md')}
+                  <div>
+                    <span className="font-bold text-red-900 block leading-tight">
+                      YouTube Data API
+                    </span>
+                    <span className="text-[10px] text-red-700 font-bold uppercase tracking-wider">
+                      Wajib API Key
+                    </span>
+                  </div>
+                </div>
+                <span className="text-[10px] text-slate-600 block mt-2">
+                  Kunci resmi Google Cloud Console (Kuota gratis 10.000 poin/hari).
                 </span>
-                <span className="text-[11px] text-red-700 font-semibold mt-1 block">Wajib API Key</span>
-                <span className="text-[10px] text-slate-600 block mt-0.5">Kunci resmi Google Cloud Console (Kuota gratis 10.000 poin/hari).</span>
               </div>
 
               <div className="p-3 bg-fuchsia-50/70 border border-fuchsia-200 rounded-lg">
-                <span className="font-bold text-fuchsia-900 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-fuchsia-500" /> Instagram Scraper
+                <div className="flex items-center gap-2">
+                  {renderPlatformIcon('Instagram', 'md')}
+                  <div>
+                    <span className="font-bold text-fuchsia-900 block leading-tight">
+                      Instagram Scraper
+                    </span>
+                    <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">
+                      Tanpa API & Login
+                    </span>
+                  </div>
+                </div>
+                <span className="text-[10px] text-slate-600 block mt-2">
+                  Open Graph public crawler dari 8 media berita, bebas kuota.
                 </span>
-                <span className="text-[11px] text-emerald-700 font-semibold mt-1 block">Tanpa API Key & Login</span>
-                <span className="text-[10px] text-slate-600 block mt-0.5">Open Graph public crawler dari 8 media berita, bebas kuota.</span>
               </div>
 
               <div className="p-3 bg-blue-50/70 border border-blue-200 rounded-lg">
-                <span className="font-bold text-blue-900 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-blue-500" /> Facebook Crawler
+                <div className="flex items-center gap-2">
+                  {renderPlatformIcon('Facebook', 'md')}
+                  <div>
+                    <span className="font-bold text-blue-900 block leading-tight">
+                      Facebook Crawler
+                    </span>
+                    <span className="text-[10px] text-emerald-700 font-bold uppercase tracking-wider">
+                      Tanpa API & Login
+                    </span>
+                  </div>
+                </div>
+                <span className="text-[10px] text-slate-600 block mt-2">
+                  News crawler publik dari 4 fanspage resmi, bebas kuota.
                 </span>
-                <span className="text-[11px] text-emerald-700 font-semibold mt-1 block">Tanpa API Key & Login</span>
-                <span className="text-[10px] text-slate-600 block mt-0.5">News crawler publik dari 4 fanspage resmi, bebas kuota.</span>
               </div>
 
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-                <span className="font-bold text-slate-900 flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-slate-400" /> TikTok API
+                <div className="flex items-center gap-2">
+                  {renderPlatformIcon('TikTok', 'md')}
+                  <div>
+                    <span className="font-bold text-slate-900 block leading-tight">
+                      TikTok API
+                    </span>
+                    <span className="text-[10px] text-slate-600 font-bold uppercase tracking-wider">
+                      Creative / Crawler
+                    </span>
+                  </div>
+                </div>
+                <span className="text-[10px] text-slate-500 block mt-2">
+                  Pencarian tagar & video publik seputar isu MBG.
                 </span>
-                <span className="text-[11px] text-slate-600 font-semibold mt-1 block">Creative API / Crawler</span>
-                <span className="text-[10px] text-slate-500 block mt-0.5">Pencarian tagar & video publik seputar isu MBG.</span>
               </div>
             </div>
 
@@ -591,6 +681,7 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
               <div>
                 <div className="flex items-center justify-between mb-1">
                   <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                    <FontAwesomeIcon icon={faYoutube} className="text-red-600 text-sm" />
                     <span>YouTube Data API v3 Key:</span>
                     <span className="text-[10px] font-normal text-slate-400 font-mono">(Google Cloud Console)</span>
                   </label>
@@ -734,15 +825,18 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
                 <tbody className="divide-y divide-slate-100 text-slate-700">
                   {collectorsList.map((c) => (
                     <tr key={c.platform} className="hover:bg-slate-50/70">
-                      <td className="py-3 px-3 font-bold text-slate-900 flex items-center gap-2">
-                        <span
-                          className={`w-2 h-2 rounded-full ${
-                            c.status.includes('Active') || c.status.includes('Connected')
-                              ? 'bg-emerald-500'
-                              : 'bg-rose-500'
-                          }`}
-                        ></span>
-                        {c.platform}
+                      <td className="py-3 px-3 font-bold text-slate-900">
+                        <div className="flex items-center gap-2.5">
+                          <span
+                            className={`w-2 h-2 rounded-full shrink-0 ${
+                              c.status.includes('Active') || c.status.includes('Connected')
+                                ? 'bg-emerald-500'
+                                : 'bg-rose-500'
+                            }`}
+                          ></span>
+                          {renderPlatformIcon(c.platform, 'sm')}
+                          <span className="font-semibold text-slate-900">{c.platform}</span>
+                        </div>
                       </td>
                       <td className="py-3 px-3 text-slate-600 font-mono text-[11px]">
                         {c.mode}
