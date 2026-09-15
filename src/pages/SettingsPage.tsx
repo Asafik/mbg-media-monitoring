@@ -237,25 +237,14 @@ export const SettingsPage: React.FC<SettingsPageProps> = ({
 
   return (
     <div className="space-y-6 pb-10 animate-section">
-      {/* Title & Top Save Button */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <div>
-          <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
-            Pengaturan Sistem & Pemantauan MBG
-          </h2>
-          <p className="text-xs text-slate-500 mt-1">
-            Pusat kontrol database, status koneksi API platform sosial media, dan logika pemantauan crawler.
-          </p>
-        </div>
-
-        <button
-          type="button"
-          onClick={handleSave}
-          className="self-start sm:self-auto bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold px-4 py-2 rounded-lg flex items-center gap-1.5 shadow-2xs transition-colors cursor-pointer"
-        >
-          <Save className="w-3.5 h-3.5" />
-          <span>Simpan Perubahan</span>
-        </button>
+      {/* Title Header */}
+      <div>
+        <h2 className="text-xl font-bold text-slate-900 tracking-tight leading-tight">
+          Pengaturan Sistem & Pemantauan MBG
+        </h2>
+        <p className="text-xs text-slate-500 mt-1">
+          Pusat kontrol database, status koneksi API platform sosial media, dan logika pemantauan crawler.
+        </p>
       </div>
 
       {/* Sub-section Indicator */}
